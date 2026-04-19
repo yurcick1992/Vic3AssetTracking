@@ -1,0 +1,13 @@
+# Let git handle line endings automatically
+* text=auto
+
+# Mod text files
+*.txt text
+*.gui text
+*.yml text
+*.md text
+*.json text
+
+# Binary assets
+*.png binary
+*.dds binary
