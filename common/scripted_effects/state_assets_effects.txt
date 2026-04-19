@@ -1,0 +1,661 @@
+# State Assets Visualization v1.3 — Scripted Effects
+# Five groups of metrics with yearly snapshots (up to 5 years) and deltas:
+#   1. Government-owned domestic building levels + privatization value (Assets tab)
+#   2. Government net worth = treasury + gov asset value (Assets tab)
+#   3. National industry levels: domestic + foreign, split columns (Capital tab)
+#   4. National industry value: domestic + foreign, split columns (Capital tab)
+#   5. National capital: dom_value + for_value + treasury + ipool (Capital tab)
+
+# ─── COUNTING (Government-owned domestic) ───
+# Count government-owned building levels and privatization value in ROOT's states,
+# then capture treasury and compute net worth.
+# Must be called in country scope.
+inv_count_gov_building_levels_effect = {
+	# Reset counters
+	set_variable = { name = gov_levels_current value = 0 }
+	set_variable = { name = gov_value_current value = 0 }
+
+	# Sum across all privatizable buildings
+	every_scope_building = {
+		limit = {
+			is_government_funded = no
+			is_subsistence_building = no
+			NOT = { is_building_group = bg_service }
+			NOT = { is_building_group = bg_owner_buildings }
+			NOT = { is_building_group = bg_gold_fields }
+			NOT = { is_building_group = bg_monuments_hidden }
+			country_ownership_fraction > 0
+		}
+		ROOT = {
+			change_variable = { name = gov_levels_current add = PREV.inv_gov_owned_levels_value }
+			change_variable = { name = gov_value_current add = PREV.inv_gov_owned_value_per_building }
+		}
+	}
+
+	# Capture treasury: cash reserves minus debt principal
+	set_variable = { name = treasury_current value = gold_reserves }
+	change_variable = { name = treasury_current subtract = principal }
+
+	# Compute net worth = treasury + state asset value
+	set_variable = { name = total_current value = var:treasury_current }
+	change_variable = { name = total_current add = var:gov_value_current }
+}
+
+# ─── COUNTING (National assets: domestic + foreign, split) ───
+# Count ALL nationally-owned building levels and value (gov + private + self combined)
+# across both domestic states and foreign countries where ROOT has investment.
+# Uses the staircase approach (levels_owned_by_country) for accurate counting.
+# Also captures investment pool and computes national capital sum.
+# Must be called in country scope AFTER inv_count_gov_building_levels_effect
+# (requires treasury_current to be set).
+inv_count_national_assets_effect = {
+	# Reset counters — domestic and foreign tracked separately
+	set_variable = { name = nat_dom_levels_current value = 0 }
+	set_variable = { name = nat_dom_value_current value = 0 }
+	set_variable = { name = nat_for_levels_current value = 0 }
+	set_variable = { name = nat_for_value_current value = 0 }
+
+	# Save ROOT for gdp_ownership_ratio filter in nested scopes
+	save_scope_as = inv_root
+
+	# ── Domestic buildings ──
+	# levels_owned_by_country(ROOT) counts all of ROOT's nationals' ownership
+	# (government + private + self combined).
+	every_scope_building = {
+		limit = {
+			is_government_funded = no
+			is_subsistence_building = no
+			NOT = { is_building_group = bg_service }
+			NOT = { is_building_group = bg_owner_buildings }
+			NOT = { is_building_group = bg_gold_fields }
+			NOT = { is_building_group = bg_monuments_hidden }
+			levels_owned_by_country = { target = ROOT value >= 1 }
+		}
+		inv_staircase_nat_levels_effect = yes
+		inv_compute_nat_value_for_building_effect = yes
+		ROOT = {
+			change_variable = { name = nat_dom_levels_current add = var:temp_bldg_nat_levels }
+			change_variable = { name = nat_dom_value_current add = var:temp_bldg_nat_value }
+		}
+	}
+
+	# ── Foreign buildings ──
+	# Pre-filter: only iterate countries where ROOT has any investment (O(countries) check).
+	every_country = {
+		limit = {
+			NOT = { this = scope:inv_root }
+			"gdp_ownership_ratio(scope:inv_root)" > 0
+		}
+		every_scope_building = {
+			limit = {
+				is_government_funded = no
+				is_subsistence_building = no
+				NOT = { is_building_group = bg_service }
+				NOT = { is_building_group = bg_owner_buildings }
+				NOT = { is_building_group = bg_gold_fields }
+				NOT = { is_building_group = bg_monuments_hidden }
+				levels_owned_by_country = { target = ROOT value >= 1 }
+			}
+			inv_staircase_nat_levels_effect = yes
+			inv_compute_nat_value_for_building_effect = yes
+			scope:inv_root = {
+				change_variable = { name = nat_for_levels_current add = var:temp_bldg_nat_levels }
+				change_variable = { name = nat_for_value_current add = var:temp_bldg_nat_value }
+			}
+		}
+	}
+
+	# ── Sum columns (derived) ──
+	set_variable = { name = nat_sum_levels_current value = var:nat_dom_levels_current }
+	change_variable = { name = nat_sum_levels_current add = var:nat_for_levels_current }
+
+	set_variable = { name = nat_sum_value_current value = var:nat_dom_value_current }
+	change_variable = { name = nat_sum_value_current add = var:nat_for_value_current }
+
+	# Capture investment pool
+	set_variable = { name = ipool_current value = investment_pool }
+
+	# Compute national capital = sum_value + treasury + ipool
+	set_variable = { name = natcap_current value = var:nat_sum_value_current }
+	change_variable = { name = natcap_current add = var:treasury_current }
+	change_variable = { name = natcap_current add = var:ipool_current }
+}
+
+# ─── DELTAS ───
+# Compute deltas between start-of-year (year_0) and historical snapshots (year_1/2/5).
+# Level deltas are absolute (year_0 - year_X). Monetary deltas are percentage
+# ((year_0 / year_X - 1) x 100). Division by zero yields 0 in Jomini.
+# Must be called in country scope after current values have been updated.
+inv_compute_deltas_effect = {
+	# ── Snapshot ages (for GUI: show dashes until real data exists) ──
+	set_variable = { name = snap_age_1 value = var:snap_year_0 }
+	change_variable = { name = snap_age_1 subtract = var:snap_year_1 }
+
+	set_variable = { name = snap_age_2 value = var:snap_year_0 }
+	change_variable = { name = snap_age_2 subtract = var:snap_year_2 }
+
+	set_variable = { name = snap_age_5 value = var:snap_year_0 }
+	change_variable = { name = snap_age_5 subtract = var:snap_year_5 }
+
+	# ── Gov level deltas (year_0 minus year_X) ──
+	set_variable = { name = gov_levels_delta_y1 value = var:gov_levels_year_0 }
+	change_variable = { name = gov_levels_delta_y1 subtract = var:gov_levels_year_1 }
+
+	set_variable = { name = gov_levels_delta_y2 value = var:gov_levels_year_0 }
+	change_variable = { name = gov_levels_delta_y2 subtract = var:gov_levels_year_2 }
+
+	set_variable = { name = gov_levels_delta_y5 value = var:gov_levels_year_0 }
+	change_variable = { name = gov_levels_delta_y5 subtract = var:gov_levels_year_5 }
+
+	# ── Gov value % deltas ──
+	set_variable = { name = gov_value_delta_y1 value = var:gov_value_year_0 }
+	change_variable = { name = gov_value_delta_y1 divide = var:gov_value_year_1 }
+	change_variable = { name = gov_value_delta_y1 subtract = 1 }
+	change_variable = { name = gov_value_delta_y1 multiply = 100 }
+
+	set_variable = { name = gov_value_delta_y2 value = var:gov_value_year_0 }
+	change_variable = { name = gov_value_delta_y2 divide = var:gov_value_year_2 }
+	change_variable = { name = gov_value_delta_y2 subtract = 1 }
+	change_variable = { name = gov_value_delta_y2 multiply = 100 }
+
+	set_variable = { name = gov_value_delta_y5 value = var:gov_value_year_0 }
+	change_variable = { name = gov_value_delta_y5 divide = var:gov_value_year_5 }
+	change_variable = { name = gov_value_delta_y5 subtract = 1 }
+	change_variable = { name = gov_value_delta_y5 multiply = 100 }
+
+	# ── Treasury % deltas ──
+	set_variable = { name = treasury_delta_y1 value = var:treasury_year_0 }
+	change_variable = { name = treasury_delta_y1 divide = var:treasury_year_1 }
+	change_variable = { name = treasury_delta_y1 subtract = 1 }
+	change_variable = { name = treasury_delta_y1 multiply = 100 }
+
+	set_variable = { name = treasury_delta_y2 value = var:treasury_year_0 }
+	change_variable = { name = treasury_delta_y2 divide = var:treasury_year_2 }
+	change_variable = { name = treasury_delta_y2 subtract = 1 }
+	change_variable = { name = treasury_delta_y2 multiply = 100 }
+
+	set_variable = { name = treasury_delta_y5 value = var:treasury_year_0 }
+	change_variable = { name = treasury_delta_y5 divide = var:treasury_year_5 }
+	change_variable = { name = treasury_delta_y5 subtract = 1 }
+	change_variable = { name = treasury_delta_y5 multiply = 100 }
+
+	# ── Net worth % deltas ──
+	set_variable = { name = total_delta_y1 value = var:total_year_0 }
+	change_variable = { name = total_delta_y1 divide = var:total_year_1 }
+	change_variable = { name = total_delta_y1 subtract = 1 }
+	change_variable = { name = total_delta_y1 multiply = 100 }
+
+	set_variable = { name = total_delta_y2 value = var:total_year_0 }
+	change_variable = { name = total_delta_y2 divide = var:total_year_2 }
+	change_variable = { name = total_delta_y2 subtract = 1 }
+	change_variable = { name = total_delta_y2 multiply = 100 }
+
+	set_variable = { name = total_delta_y5 value = var:total_year_0 }
+	change_variable = { name = total_delta_y5 divide = var:total_year_5 }
+	change_variable = { name = total_delta_y5 subtract = 1 }
+	change_variable = { name = total_delta_y5 multiply = 100 }
+
+	# ── Domestic level deltas (year_0 minus year_X) — Capital tab Table 1 ──
+	set_variable = { name = nat_dom_levels_delta_y1 value = var:nat_dom_levels_year_0 }
+	change_variable = { name = nat_dom_levels_delta_y1 subtract = var:nat_dom_levels_year_1 }
+
+	set_variable = { name = nat_dom_levels_delta_y2 value = var:nat_dom_levels_year_0 }
+	change_variable = { name = nat_dom_levels_delta_y2 subtract = var:nat_dom_levels_year_2 }
+
+	set_variable = { name = nat_dom_levels_delta_y5 value = var:nat_dom_levels_year_0 }
+	change_variable = { name = nat_dom_levels_delta_y5 subtract = var:nat_dom_levels_year_5 }
+
+	# ── Foreign level deltas (year_0 minus year_X) — Capital tab Table 1 ──
+	set_variable = { name = nat_for_levels_delta_y1 value = var:nat_for_levels_year_0 }
+	change_variable = { name = nat_for_levels_delta_y1 subtract = var:nat_for_levels_year_1 }
+
+	set_variable = { name = nat_for_levels_delta_y2 value = var:nat_for_levels_year_0 }
+	change_variable = { name = nat_for_levels_delta_y2 subtract = var:nat_for_levels_year_2 }
+
+	set_variable = { name = nat_for_levels_delta_y5 value = var:nat_for_levels_year_0 }
+	change_variable = { name = nat_for_levels_delta_y5 subtract = var:nat_for_levels_year_5 }
+
+	# ── Sum level deltas (year_0 minus year_X) — Capital tab Table 1 ──
+	set_variable = { name = nat_sum_levels_delta_y1 value = var:nat_sum_levels_year_0 }
+	change_variable = { name = nat_sum_levels_delta_y1 subtract = var:nat_sum_levels_year_1 }
+
+	set_variable = { name = nat_sum_levels_delta_y2 value = var:nat_sum_levels_year_0 }
+	change_variable = { name = nat_sum_levels_delta_y2 subtract = var:nat_sum_levels_year_2 }
+
+	set_variable = { name = nat_sum_levels_delta_y5 value = var:nat_sum_levels_year_0 }
+	change_variable = { name = nat_sum_levels_delta_y5 subtract = var:nat_sum_levels_year_5 }
+
+	# ── Domestic value % deltas — Capital tab Table 2 ──
+	set_variable = { name = nat_dom_value_delta_y1 value = var:nat_dom_value_year_0 }
+	change_variable = { name = nat_dom_value_delta_y1 divide = var:nat_dom_value_year_1 }
+	change_variable = { name = nat_dom_value_delta_y1 subtract = 1 }
+	change_variable = { name = nat_dom_value_delta_y1 multiply = 100 }
+
+	set_variable = { name = nat_dom_value_delta_y2 value = var:nat_dom_value_year_0 }
+	change_variable = { name = nat_dom_value_delta_y2 divide = var:nat_dom_value_year_2 }
+	change_variable = { name = nat_dom_value_delta_y2 subtract = 1 }
+	change_variable = { name = nat_dom_value_delta_y2 multiply = 100 }
+
+	set_variable = { name = nat_dom_value_delta_y5 value = var:nat_dom_value_year_0 }
+	change_variable = { name = nat_dom_value_delta_y5 divide = var:nat_dom_value_year_5 }
+	change_variable = { name = nat_dom_value_delta_y5 subtract = 1 }
+	change_variable = { name = nat_dom_value_delta_y5 multiply = 100 }
+
+	# ── Foreign value % deltas — Capital tab Table 2 ──
+	set_variable = { name = nat_for_value_delta_y1 value = var:nat_for_value_year_0 }
+	change_variable = { name = nat_for_value_delta_y1 divide = var:nat_for_value_year_1 }
+	change_variable = { name = nat_for_value_delta_y1 subtract = 1 }
+	change_variable = { name = nat_for_value_delta_y1 multiply = 100 }
+
+	set_variable = { name = nat_for_value_delta_y2 value = var:nat_for_value_year_0 }
+	change_variable = { name = nat_for_value_delta_y2 divide = var:nat_for_value_year_2 }
+	change_variable = { name = nat_for_value_delta_y2 subtract = 1 }
+	change_variable = { name = nat_for_value_delta_y2 multiply = 100 }
+
+	set_variable = { name = nat_for_value_delta_y5 value = var:nat_for_value_year_0 }
+	change_variable = { name = nat_for_value_delta_y5 divide = var:nat_for_value_year_5 }
+	change_variable = { name = nat_for_value_delta_y5 subtract = 1 }
+	change_variable = { name = nat_for_value_delta_y5 multiply = 100 }
+
+	# ── Sum value % deltas — Capital tab Tables 2-3 ──
+	set_variable = { name = nat_sum_value_delta_y1 value = var:nat_sum_value_year_0 }
+	change_variable = { name = nat_sum_value_delta_y1 divide = var:nat_sum_value_year_1 }
+	change_variable = { name = nat_sum_value_delta_y1 subtract = 1 }
+	change_variable = { name = nat_sum_value_delta_y1 multiply = 100 }
+
+	set_variable = { name = nat_sum_value_delta_y2 value = var:nat_sum_value_year_0 }
+	change_variable = { name = nat_sum_value_delta_y2 divide = var:nat_sum_value_year_2 }
+	change_variable = { name = nat_sum_value_delta_y2 subtract = 1 }
+	change_variable = { name = nat_sum_value_delta_y2 multiply = 100 }
+
+	set_variable = { name = nat_sum_value_delta_y5 value = var:nat_sum_value_year_0 }
+	change_variable = { name = nat_sum_value_delta_y5 divide = var:nat_sum_value_year_5 }
+	change_variable = { name = nat_sum_value_delta_y5 subtract = 1 }
+	change_variable = { name = nat_sum_value_delta_y5 multiply = 100 }
+
+	# ── Investment pool % deltas — Capital tab Table 3 ──
+	set_variable = { name = ipool_delta_y1 value = var:ipool_year_0 }
+	change_variable = { name = ipool_delta_y1 divide = var:ipool_year_1 }
+	change_variable = { name = ipool_delta_y1 subtract = 1 }
+	change_variable = { name = ipool_delta_y1 multiply = 100 }
+
+	set_variable = { name = ipool_delta_y2 value = var:ipool_year_0 }
+	change_variable = { name = ipool_delta_y2 divide = var:ipool_year_2 }
+	change_variable = { name = ipool_delta_y2 subtract = 1 }
+	change_variable = { name = ipool_delta_y2 multiply = 100 }
+
+	set_variable = { name = ipool_delta_y5 value = var:ipool_year_0 }
+	change_variable = { name = ipool_delta_y5 divide = var:ipool_year_5 }
+	change_variable = { name = ipool_delta_y5 subtract = 1 }
+	change_variable = { name = ipool_delta_y5 multiply = 100 }
+
+	# ── National capital % deltas — Capital tab Table 2 sum column ──
+	set_variable = { name = natcap_delta_y1 value = var:natcap_year_0 }
+	change_variable = { name = natcap_delta_y1 divide = var:natcap_year_1 }
+	change_variable = { name = natcap_delta_y1 subtract = 1 }
+	change_variable = { name = natcap_delta_y1 multiply = 100 }
+
+	set_variable = { name = natcap_delta_y2 value = var:natcap_year_0 }
+	change_variable = { name = natcap_delta_y2 divide = var:natcap_year_2 }
+	change_variable = { name = natcap_delta_y2 subtract = 1 }
+	change_variable = { name = natcap_delta_y2 multiply = 100 }
+
+	set_variable = { name = natcap_delta_y5 value = var:natcap_year_0 }
+	change_variable = { name = natcap_delta_y5 divide = var:natcap_year_5 }
+	change_variable = { name = natcap_delta_y5 subtract = 1 }
+	change_variable = { name = natcap_delta_y5 multiply = 100 }
+}
+
+# ─── SNAPSHOTS ───
+# Roll snapshots forward — called during January's monthly pulse.
+# Must be called in country scope.
+inv_yearly_snapshot_effect = {
+	# ── Gov level snapshots (roll from oldest first) ──
+	set_variable = { name = gov_levels_year_5 value = var:gov_levels_year_4 }
+	set_variable = { name = gov_levels_year_4 value = var:gov_levels_year_3 }
+	set_variable = { name = gov_levels_year_3 value = var:gov_levels_year_2 }
+	set_variable = { name = gov_levels_year_2 value = var:gov_levels_year_1 }
+	set_variable = { name = gov_levels_year_1 value = var:gov_levels_year_0 }
+	set_variable = { name = gov_levels_year_0 value = var:gov_levels_current }
+
+	# ── Gov value snapshots ──
+	set_variable = { name = gov_value_year_5 value = var:gov_value_year_4 }
+	set_variable = { name = gov_value_year_4 value = var:gov_value_year_3 }
+	set_variable = { name = gov_value_year_3 value = var:gov_value_year_2 }
+	set_variable = { name = gov_value_year_2 value = var:gov_value_year_1 }
+	set_variable = { name = gov_value_year_1 value = var:gov_value_year_0 }
+	set_variable = { name = gov_value_year_0 value = var:gov_value_current }
+
+	# ── Treasury snapshots ──
+	set_variable = { name = treasury_year_5 value = var:treasury_year_4 }
+	set_variable = { name = treasury_year_4 value = var:treasury_year_3 }
+	set_variable = { name = treasury_year_3 value = var:treasury_year_2 }
+	set_variable = { name = treasury_year_2 value = var:treasury_year_1 }
+	set_variable = { name = treasury_year_1 value = var:treasury_year_0 }
+	set_variable = { name = treasury_year_0 value = var:treasury_current }
+
+	# ── Net worth snapshots (derived: treasury + gov_value at each year) ──
+	set_variable = { name = total_year_5 value = var:treasury_year_5 }
+	change_variable = { name = total_year_5 add = var:gov_value_year_5 }
+
+	set_variable = { name = total_year_2 value = var:treasury_year_2 }
+	change_variable = { name = total_year_2 add = var:gov_value_year_2 }
+
+	set_variable = { name = total_year_1 value = var:treasury_year_1 }
+	change_variable = { name = total_year_1 add = var:gov_value_year_1 }
+
+	set_variable = { name = total_year_0 value = var:treasury_year_0 }
+	change_variable = { name = total_year_0 add = var:gov_value_year_0 }
+
+	# ── Domestic level snapshots ──
+	set_variable = { name = nat_dom_levels_year_5 value = var:nat_dom_levels_year_4 }
+	set_variable = { name = nat_dom_levels_year_4 value = var:nat_dom_levels_year_3 }
+	set_variable = { name = nat_dom_levels_year_3 value = var:nat_dom_levels_year_2 }
+	set_variable = { name = nat_dom_levels_year_2 value = var:nat_dom_levels_year_1 }
+	set_variable = { name = nat_dom_levels_year_1 value = var:nat_dom_levels_year_0 }
+	set_variable = { name = nat_dom_levels_year_0 value = var:nat_dom_levels_current }
+
+	# ── Foreign level snapshots ──
+	set_variable = { name = nat_for_levels_year_5 value = var:nat_for_levels_year_4 }
+	set_variable = { name = nat_for_levels_year_4 value = var:nat_for_levels_year_3 }
+	set_variable = { name = nat_for_levels_year_3 value = var:nat_for_levels_year_2 }
+	set_variable = { name = nat_for_levels_year_2 value = var:nat_for_levels_year_1 }
+	set_variable = { name = nat_for_levels_year_1 value = var:nat_for_levels_year_0 }
+	set_variable = { name = nat_for_levels_year_0 value = var:nat_for_levels_current }
+
+	# ── Sum level snapshots (derived: dom + for at each displayed year) ──
+	set_variable = { name = nat_sum_levels_year_5 value = var:nat_dom_levels_year_5 }
+	change_variable = { name = nat_sum_levels_year_5 add = var:nat_for_levels_year_5 }
+
+	set_variable = { name = nat_sum_levels_year_2 value = var:nat_dom_levels_year_2 }
+	change_variable = { name = nat_sum_levels_year_2 add = var:nat_for_levels_year_2 }
+
+	set_variable = { name = nat_sum_levels_year_1 value = var:nat_dom_levels_year_1 }
+	change_variable = { name = nat_sum_levels_year_1 add = var:nat_for_levels_year_1 }
+
+	set_variable = { name = nat_sum_levels_year_0 value = var:nat_dom_levels_year_0 }
+	change_variable = { name = nat_sum_levels_year_0 add = var:nat_for_levels_year_0 }
+
+	# ── Domestic value snapshots ──
+	set_variable = { name = nat_dom_value_year_5 value = var:nat_dom_value_year_4 }
+	set_variable = { name = nat_dom_value_year_4 value = var:nat_dom_value_year_3 }
+	set_variable = { name = nat_dom_value_year_3 value = var:nat_dom_value_year_2 }
+	set_variable = { name = nat_dom_value_year_2 value = var:nat_dom_value_year_1 }
+	set_variable = { name = nat_dom_value_year_1 value = var:nat_dom_value_year_0 }
+	set_variable = { name = nat_dom_value_year_0 value = var:nat_dom_value_current }
+
+	# ── Foreign value snapshots ──
+	set_variable = { name = nat_for_value_year_5 value = var:nat_for_value_year_4 }
+	set_variable = { name = nat_for_value_year_4 value = var:nat_for_value_year_3 }
+	set_variable = { name = nat_for_value_year_3 value = var:nat_for_value_year_2 }
+	set_variable = { name = nat_for_value_year_2 value = var:nat_for_value_year_1 }
+	set_variable = { name = nat_for_value_year_1 value = var:nat_for_value_year_0 }
+	set_variable = { name = nat_for_value_year_0 value = var:nat_for_value_current }
+
+	# ── Sum value snapshots (derived: dom_value + for_value at each displayed year) ──
+	set_variable = { name = nat_sum_value_year_5 value = var:nat_dom_value_year_5 }
+	change_variable = { name = nat_sum_value_year_5 add = var:nat_for_value_year_5 }
+
+	set_variable = { name = nat_sum_value_year_2 value = var:nat_dom_value_year_2 }
+	change_variable = { name = nat_sum_value_year_2 add = var:nat_for_value_year_2 }
+
+	set_variable = { name = nat_sum_value_year_1 value = var:nat_dom_value_year_1 }
+	change_variable = { name = nat_sum_value_year_1 add = var:nat_for_value_year_1 }
+
+	set_variable = { name = nat_sum_value_year_0 value = var:nat_dom_value_year_0 }
+	change_variable = { name = nat_sum_value_year_0 add = var:nat_for_value_year_0 }
+
+	# ── Investment pool snapshots ──
+	set_variable = { name = ipool_year_5 value = var:ipool_year_4 }
+	set_variable = { name = ipool_year_4 value = var:ipool_year_3 }
+	set_variable = { name = ipool_year_3 value = var:ipool_year_2 }
+	set_variable = { name = ipool_year_2 value = var:ipool_year_1 }
+	set_variable = { name = ipool_year_1 value = var:ipool_year_0 }
+	set_variable = { name = ipool_year_0 value = var:ipool_current }
+
+	# ── National capital snapshots (derived: sum_value + treasury + ipool) ──
+	set_variable = { name = natcap_year_5 value = var:nat_sum_value_year_5 }
+	change_variable = { name = natcap_year_5 add = var:treasury_year_5 }
+	change_variable = { name = natcap_year_5 add = var:ipool_year_5 }
+
+	set_variable = { name = natcap_year_2 value = var:nat_sum_value_year_2 }
+	change_variable = { name = natcap_year_2 add = var:treasury_year_2 }
+	change_variable = { name = natcap_year_2 add = var:ipool_year_2 }
+
+	set_variable = { name = natcap_year_1 value = var:nat_sum_value_year_1 }
+	change_variable = { name = natcap_year_1 add = var:treasury_year_1 }
+	change_variable = { name = natcap_year_1 add = var:ipool_year_1 }
+
+	set_variable = { name = natcap_year_0 value = var:nat_sum_value_year_0 }
+	change_variable = { name = natcap_year_0 add = var:treasury_year_0 }
+	change_variable = { name = natcap_year_0 add = var:ipool_year_0 }
+
+	# ── Year labels (roll alongside data) ──
+	set_variable = { name = snap_year_5 value = var:snap_year_4 }
+	set_variable = { name = snap_year_4 value = var:snap_year_3 }
+	set_variable = { name = snap_year_3 value = var:snap_year_2 }
+	set_variable = { name = snap_year_2 value = var:snap_year_1 }
+	set_variable = { name = snap_year_1 value = var:snap_year_0 }
+	set_variable = { name = snap_year_0 value = year }
+}
+
+# ─── FIRST-TICK SEED ───
+# On the very first monthly tick, seed all snapshots with current values.
+# Additional blocks handle upgrades from v1.0, v1.1/v1.2, and old v1.3 saves.
+inv_first_tick_seed_effect = {
+	# Original seed — new game, never initialized
+	if = {
+		limit = {
+			NOT = { has_variable = gov_initialized }
+		}
+		# Gov level seeds
+		set_variable = { name = gov_levels_year_0 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_1 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_2 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_3 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_4 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_5 value = var:gov_levels_current }
+
+		# Gov value seeds
+		set_variable = { name = gov_value_year_0 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_1 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_2 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_3 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_4 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_5 value = var:gov_value_current }
+
+		# Treasury seeds
+		set_variable = { name = treasury_year_0 value = var:treasury_current }
+		set_variable = { name = treasury_year_1 value = var:treasury_current }
+		set_variable = { name = treasury_year_2 value = var:treasury_current }
+		set_variable = { name = treasury_year_3 value = var:treasury_current }
+		set_variable = { name = treasury_year_4 value = var:treasury_current }
+		set_variable = { name = treasury_year_5 value = var:treasury_current }
+
+		# Net worth seeds
+		set_variable = { name = total_year_0 value = var:total_current }
+		set_variable = { name = total_year_1 value = var:total_current }
+		set_variable = { name = total_year_2 value = var:total_current }
+		set_variable = { name = total_year_5 value = var:total_current }
+
+		# Domestic level seeds
+		set_variable = { name = nat_dom_levels_year_0 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_1 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_2 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_3 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_4 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_5 value = var:nat_dom_levels_current }
+
+		# Foreign level seeds
+		set_variable = { name = nat_for_levels_year_0 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_1 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_2 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_3 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_4 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_5 value = var:nat_for_levels_current }
+
+		# Sum level seeds
+		set_variable = { name = nat_sum_levels_year_0 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_sum_levels_year_1 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_sum_levels_year_2 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_sum_levels_year_5 value = var:nat_sum_levels_current }
+
+		# Domestic value seeds
+		set_variable = { name = nat_dom_value_year_0 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_1 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_2 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_3 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_4 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_5 value = var:nat_dom_value_current }
+
+		# Foreign value seeds
+		set_variable = { name = nat_for_value_year_0 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_1 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_2 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_3 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_4 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_5 value = var:nat_for_value_current }
+
+		# Investment pool seeds
+		set_variable = { name = ipool_year_0 value = var:ipool_current }
+		set_variable = { name = ipool_year_1 value = var:ipool_current }
+		set_variable = { name = ipool_year_2 value = var:ipool_current }
+		set_variable = { name = ipool_year_3 value = var:ipool_current }
+		set_variable = { name = ipool_year_4 value = var:ipool_current }
+		set_variable = { name = ipool_year_5 value = var:ipool_current }
+
+		# Sum value seeds
+		set_variable = { name = nat_sum_value_year_0 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_1 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_2 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_5 value = var:nat_sum_value_current }
+
+		# National capital seeds
+		set_variable = { name = natcap_year_0 value = var:natcap_current }
+		set_variable = { name = natcap_year_1 value = var:natcap_current }
+		set_variable = { name = natcap_year_2 value = var:natcap_current }
+		set_variable = { name = natcap_year_5 value = var:natcap_current }
+
+		# Year labels
+		set_variable = { name = snap_year_0 value = year }
+		set_variable = { name = snap_year_1 value = year }
+		set_variable = { name = snap_year_2 value = year }
+		set_variable = { name = snap_year_3 value = year }
+		set_variable = { name = snap_year_4 value = year }
+		set_variable = { name = snap_year_5 value = year }
+
+		set_variable = { name = gov_initialized value = 1 }
+		set_variable = { name = gov_v11_initialized value = 1 }
+		set_variable = { name = gov_v13_initialized value = 1 }
+		set_variable = { name = gov_v13b_initialized value = 1 }
+		set_variable = { name = gov_v13c_initialized value = 1 }
+	}
+
+	# v1.1 upgrade seed — existing v1.0 save
+	if = {
+		limit = {
+			has_variable = gov_initialized
+			NOT = { has_variable = gov_v11_initialized }
+		}
+		set_variable = { name = gov_levels_year_3 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_4 value = var:gov_levels_current }
+		set_variable = { name = gov_levels_year_5 value = var:gov_levels_current }
+		set_variable = { name = gov_value_year_3 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_4 value = var:gov_value_current }
+		set_variable = { name = gov_value_year_5 value = var:gov_value_current }
+		set_variable = { name = treasury_year_0 value = var:treasury_current }
+		set_variable = { name = treasury_year_1 value = var:treasury_current }
+		set_variable = { name = treasury_year_2 value = var:treasury_current }
+		set_variable = { name = treasury_year_3 value = var:treasury_current }
+		set_variable = { name = treasury_year_4 value = var:treasury_current }
+		set_variable = { name = treasury_year_5 value = var:treasury_current }
+		set_variable = { name = total_year_0 value = var:total_current }
+		set_variable = { name = total_year_1 value = var:total_current }
+		set_variable = { name = total_year_2 value = var:total_current }
+		set_variable = { name = total_year_5 value = var:total_current }
+		set_variable = { name = snap_year_0 value = year }
+		set_variable = { name = snap_year_1 value = year }
+		set_variable = { name = snap_year_2 value = year }
+		set_variable = { name = snap_year_3 value = year }
+		set_variable = { name = snap_year_4 value = year }
+		set_variable = { name = snap_year_5 value = year }
+		set_variable = { name = gov_v11_initialized value = 1 }
+	}
+
+	# v1.3b upgrade seed — existing v1.0-v1.2 or old v1.3 save
+	if = {
+		limit = {
+			has_variable = gov_initialized
+			NOT = { has_variable = gov_v13b_initialized }
+		}
+		set_variable = { name = nat_dom_levels_year_0 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_1 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_2 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_3 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_4 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_dom_levels_year_5 value = var:nat_dom_levels_current }
+		set_variable = { name = nat_for_levels_year_0 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_1 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_2 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_3 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_4 value = var:nat_for_levels_current }
+		set_variable = { name = nat_for_levels_year_5 value = var:nat_for_levels_current }
+		set_variable = { name = nat_sum_levels_year_0 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_sum_levels_year_1 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_sum_levels_year_2 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_sum_levels_year_5 value = var:nat_sum_levels_current }
+		set_variable = { name = nat_dom_value_year_0 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_1 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_2 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_3 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_4 value = var:nat_dom_value_current }
+		set_variable = { name = nat_dom_value_year_5 value = var:nat_dom_value_current }
+		set_variable = { name = nat_for_value_year_0 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_1 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_2 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_3 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_4 value = var:nat_for_value_current }
+		set_variable = { name = nat_for_value_year_5 value = var:nat_for_value_current }
+		set_variable = { name = ipool_year_0 value = var:ipool_current }
+		set_variable = { name = ipool_year_1 value = var:ipool_current }
+		set_variable = { name = ipool_year_2 value = var:ipool_current }
+		set_variable = { name = ipool_year_3 value = var:ipool_current }
+		set_variable = { name = ipool_year_4 value = var:ipool_current }
+		set_variable = { name = ipool_year_5 value = var:ipool_current }
+		set_variable = { name = natcap_year_0 value = var:natcap_current }
+		set_variable = { name = natcap_year_1 value = var:natcap_current }
+		set_variable = { name = natcap_year_2 value = var:natcap_current }
+		set_variable = { name = natcap_year_5 value = var:natcap_current }
+		set_variable = { name = gov_v13_initialized value = 1 }
+		set_variable = { name = gov_v13b_initialized value = 1 }
+		set_variable = { name = gov_v13c_initialized value = 1 }
+	}
+
+	# v1.3c upgrade seed — existing v1.3b save (add sum value derived snapshots)
+	if = {
+		limit = {
+			has_variable = gov_v13b_initialized
+			NOT = { has_variable = gov_v13c_initialized }
+		}
+		set_variable = { name = nat_sum_value_year_0 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_1 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_2 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_5 value = var:nat_sum_value_current }
+		set_variable = { name = gov_v13c_initialized value = 1 }
+	}
+}
+
+# ─── MONTHLY UPDATE ───
+# Full monthly update — count all metrics, roll snapshots in January,
+# and recompute deltas. Must be called in country scope.
+inv_monthly_update_effect = {
+	inv_count_gov_building_levels_effect = yes
+	inv_count_national_assets_effect = yes
+	inv_first_tick_seed_effect = yes
+	# Roll snapshots in January (month is 0-indexed: 0 = January)
+	if = {
+		limit = { month = 0 }
+		inv_yearly_snapshot_effect = yes
+	}
+	inv_compute_deltas_effect = yes
+}

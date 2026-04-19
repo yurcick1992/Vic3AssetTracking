@@ -1,0 +1,85 @@
+# State Assets Visualization v1.3 — Script Values
+# Reused by both domestic gov counting (Assets tab) and national asset counting (Capital tab).
+# country_ownership_fraction scopes to ROOT, so these work for both domestic and foreign buildings.
+
+# ─── LEVELS ───
+# Building-scope: returns nationally-owned levels for this building.
+# level * country_ownership_fraction, rounded to nearest integer.
+inv_gov_owned_levels_value = {
+	value = level
+	multiply = country_ownership_fraction
+	round = yes
+}
+
+# ─── MONETARY VALUE ───
+# Building-scope: returns privatization cost of government-owned levels.
+# Formula: required_construction * PRIVATIZATION_PER_LEVEL_COST * gov_levels
+# where gov_levels comes from inv_gov_owned_levels_value (already rounded).
+# This ensures the value column is always a clean multiple of the cost tier.
+#
+# Construction cost tiers (from building_values.txt):
+#   very_low (100): trade centers
+#   low      (200): agriculture, ranching, plantations, logging, rubber, fishing, whaling
+#   medium   (400): mines, oil rigs, ports, arts academy, power plants
+#   high     (600): light industry
+#   very_high(800): heavy industry, military industry, railways
+
+inv_gov_owned_value_per_building = {
+	value = 0
+
+	# ── Determine construction cost per level ──
+
+	# VERY_LOW (100): trade centers
+	if = {
+		limit = { is_building_group = bg_trade }
+		add = 100
+	}
+	# LOW (200): agriculture, ranching, plantations, extraction primaries
+	else_if = {
+		limit = {
+			OR = {
+				is_building_group = bg_agriculture
+				is_building_group = bg_ranching
+				is_building_group = bg_plantations
+				is_building_group = bg_logging
+				is_building_group = bg_rubber
+				is_building_group = bg_fishing
+				is_building_group = bg_whaling
+			}
+		}
+		add = 200
+	}
+	# VERY_HIGH (800): railway (must check before medium, since both are bg_private_infrastructure)
+	else_if = {
+		limit = { is_building_type = building_railway }
+		add = 800
+	}
+	# MEDIUM (400): mines, oil, port, arts, power
+	else_if = {
+		limit = {
+			OR = {
+				is_building_group = bg_mining
+				is_building_group = bg_oil_extraction
+				is_building_group = bg_power
+				is_building_group = bg_arts
+				is_building_type = building_port
+			}
+		}
+		add = 400
+	}
+	# HIGH (600): light industry
+	else_if = {
+		limit = { is_building_group = bg_light_industry }
+		add = 600
+	}
+	# VERY_HIGH (800): heavy industry, military industry, anything else
+	else = {
+		add = 800
+	}
+
+	# ── Apply privatization cost formula ──
+	# Multiply cost tier by 250 (PRIVATIZATION_PER_LEVEL_COST), then by
+	# the rounded government-owned levels from inv_gov_owned_levels_value.
+	multiply = 250
+	multiply = inv_gov_owned_levels_value
+}

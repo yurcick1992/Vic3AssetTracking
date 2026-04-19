@@ -1,0 +1,16 @@
+# State Assets Visualization v1.0 — On Actions
+# Uses the additive on_action append pattern.
+#
+# Only hooks the monthly pulse. Snapshot rolling is handled inside the
+# monthly update effect via a `month = 0` (January) check, so that all
+# countries snapshot in January rather than on a random staggered date.
+
+on_monthly_pulse_country = {
+	on_actions = { inv_monthly_pulse_action }
+}
+
+inv_monthly_pulse_action = {
+	effect = {
+		inv_monthly_update_effect = yes
+	}
+}
