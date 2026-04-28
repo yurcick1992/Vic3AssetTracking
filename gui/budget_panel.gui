@@ -1,19 +1,19 @@
 # COPY-PASTED FOR NOW
-@panel_width_minus_10 = 530
-@panel_width = 540
-@panel_width_half = 270
-@panel_width_plus_10 = 550
-@panel_width_plus_14 = 554
-@panel_width_plus_14_half = 277
-@panel_width_plus_20 = 560
-@panel_width_plus_30 = 570
-@panel_width_plus_70 = 610
+@panel_width_minus_10 = 530			# used to be 450
+@panel_width = 540  				# used to be 460
+@panel_width_half = 270				# used to be 230
+@panel_width_plus_10 = 550  		# used to be 470
+@panel_width_plus_14 = 554			# used to be 474
+@panel_width_plus_14_half = 277		# used to be 237
+@panel_width_plus_20 = 560			# used to be 480
+@panel_width_plus_30 = 570			# used to be 490
+@panel_width_plus_70 = 610			# used to be 530
 
 types budget
-{	
+{
 	type budget_panel = default_block_window {
 		name = "budget_panel"
-		
+
 		blockoverride "animation_state_block" {
 			state = {
 				name = _show
@@ -40,7 +40,7 @@ types budget
 				using = map_modes_button_position
 			}
 		}
-		
+
 		#TOP
 		blockoverride "fixed_top"
 		{
@@ -54,10 +54,10 @@ types budget
 					name = "tutorial_highlight_weekly_balance_budget"
 					parentanchor = center
 					using = fontsize_mega
-					raw_text = "@money![AccessPlayer.PredictWeeklyBalanceWithEconomyHealthHint]"
 					autoresize = yes
 					align = hcenter|nobaseline
 					using = money_tooltip_with_graph
+					raw_text = "@money![AccessPlayer.PredictWeeklyBalanceWithEconomyHealthHint]"
 				}
 			}
 
@@ -143,7 +143,6 @@ types budget
 				blockoverride "third_button_name" {
 					name = "tutorial_highlight_assets"
 				}
-
 				blockoverride "fourth_button"
 				{
 					text = "BUDGET_TAB_CAPITAL"
@@ -171,7 +170,7 @@ types budget
 					name = "tutorial_highlight_capital"
 				}
 			}
-			
+
 			widget = { size = { 1 10 }}
 		}
 
@@ -204,12 +203,12 @@ types budget
 							raw_text = "#variable @money![GetPlayer.PredictWeeklyIncome|D+=]#!"
 							using = total_income_tooltip_with_graph
 						}
-					}					
+					}
 
 					flowcontainer = {
 						direction = vertical
 						parentanchor = hcenter
-						margin_bottom = 10			
+						margin_bottom = 10
 
 						tax_exp_frame_coin = {
 
@@ -234,40 +233,40 @@ types budget
 							blockoverride "text_money" {
 							}
 
-							blockoverride "is_selected_visibility_very_low" {
+							blockoverride "is_selected_visibility_1" {
 								visible = "[Not(IsValid(GetPlayer.SetTaxLevelVeryLow))]"
 							}
-							blockoverride "is_clickable_alpha_very_low" {
+							blockoverride "is_clickable_alpha_1" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetTaxLevelVeryLow))]"
 							}
 
-							blockoverride "is_selected_visibility_low" {
+							blockoverride "is_selected_visibility_2" {
 								visible = "[Not(IsValid(GetPlayer.SetTaxLevelLow))]"
 							}
-							blockoverride "is_clickable_alpha_low" {
+							blockoverride "is_clickable_alpha_2" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetTaxLevelLow))]"
 							}
 
-							blockoverride "is_selected_visibility_medium" {
+							blockoverride "is_selected_visibility_3" {
 								visible = "[Not(IsValid(GetPlayer.SetTaxLevelMedium))]"
 							}
-							blockoverride "is_clickable_alpha_medium" {
+							blockoverride "is_clickable_alpha_3" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetTaxLevelMedium))]"
 							}
 
-							blockoverride "is_selected_visibility_high" {
+							blockoverride "is_selected_visibility_4" {
 								visible = "[Not(IsValid(GetPlayer.SetTaxLevelHigh))]"
 							}
-							blockoverride "is_clickable_alpha_high" {
+							blockoverride "is_clickable_alpha_4" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetTaxLevelHigh))]"
 							}
-							
-							blockoverride "is_selected_visibility_very_high" {
+
+							blockoverride "is_selected_visibility_5" {
 								visible = "[Not(IsValid(GetPlayer.SetTaxLevelVeryHigh))]"
 							}
-							blockoverride "is_clickable_alpha_very_high" {
+							blockoverride "is_clickable_alpha_5" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetTaxLevelVeryHigh))]"
-							}									
+							}
 						}
 
 						tax_exp_frame = {
@@ -282,7 +281,7 @@ types budget
 								alpha = "[TransparentIfZero(GetPlayer.GetIncomeTaxIncome)]"
 							}
 						}
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -294,9 +293,9 @@ types budget
 								using = tax_poll_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.GetPollTaxIncome)]"
 							}
-						}							
+						}
 
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -308,8 +307,8 @@ types budget
 								using = consumption_tax_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.PredictConsumptionTaxes)]"
 							}
-						}	
-		
+						}
+
 						flowcontainer = {
 							margin_bottom = 10
 
@@ -317,7 +316,7 @@ types budget
 								flipdirection = yes
 								datamodel_wrap = 10
 								datamodel = "[BudgetPanel.AccessTaxedGoods]"
-								item = {		
+								item = {
 									button_icon_round = {
 										size = { 35 35 }
 										onclick = "[InformationPanelBar.OpenGoodsPanel(AccessPlayer.AccessFirstMarket.Self, Goods.Self)]"
@@ -334,8 +333,8 @@ types budget
 										}
 									}
 								}
-							}										
-						
+							}
+
 							button_icon_plus = {
 								name = "tutorial_highlight_add_consumption_tax"
 								size = { 35 35 }
@@ -344,7 +343,7 @@ types budget
 								tooltip = "[SelectLocalization( BudgetPanel.CanTaxGoods, 'TAX_GOODS', 'NO_GOODS_TO_TAX' )]"
 							}
 						}
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -357,7 +356,7 @@ types budget
 								alpha = "[TransparentIfZero(GetPlayer.PredictDividendsTaxes)]"
 							}
 						}
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -369,8 +368,8 @@ types budget
 								using = tariffs_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.PredictTariffs)]"
 							}
-						}						
-						
+						}
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -383,7 +382,7 @@ types budget
 								alpha = "[TransparentIfZero(GetPlayer.PredictMinting)]"
 							}
 						}
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -395,7 +394,7 @@ types budget
 								using = government_share_dividends_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.PredictGovernmentShareDividends)]"
 							}
-						}						
+						}
 
 						tax_exp_frame = {
 
@@ -422,7 +421,20 @@ types budget
 								alpha = "[TransparentIfZero(GetPlayer.PredictDiplomaticPactsIncome)]"
 							}
 						}
-						
+
+						tax_exp_frame = {
+
+							blockoverride "text" {
+								text = "BUDGET_TREATIES"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "#variable @money![GetPlayer.PredictTreatyIncome|D+=]#!"
+								using = treaty_income_tooltip_with_graph
+								alpha = "[TransparentIfZero(GetPlayer.PredictTreatyIncome)]"
+							}
+						}
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -434,7 +446,7 @@ types budget
 								using = additional_income_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.GetModifier.GetValueFor('country_tax_income_add'))]"
 							}
-						}								
+						}
 					}
 				}
 
@@ -457,9 +469,9 @@ types budget
 						direction = vertical
 						parentanchor = hcenter
 						margin_bottom = 10
-						
+
 						tax_exp_frame_coin = {
-						
+
 							blockoverride "text_upper" {
 								text = "BUDGET_CONSTRUCTION_GOODS"
 							}
@@ -472,7 +484,7 @@ types budget
 
 							blockoverride "revenue_controls" {
 							}
-							
+
 							blockoverride "divider" {
 							}
 
@@ -483,11 +495,11 @@ types budget
 									flowcontainer = {
 										direction = horizontal
 										spacing = 20
-										
+
 										flowcontainer = {
 											direction = vertical
 											parentanchor = vcenter
-											
+
 											button = {
 												name = "tutorial_highlight_pause_all_construction"
 
@@ -514,26 +526,26 @@ types budget
 												using = budget_resume_all_button_sound
 											}
 										}
-										
+
 										flowcontainer = {
 											direction = horizontal
 											spacing = 5
 											parentanchor = vcenter
 											datamodel = "[AccessConstructionSpeeds]"
-											
+
 											item = {
 												widget = {
 													size = { 46 52 }
 													tooltip = "[ChangeAllConstructionSpeedTooltip(ProductionMethod.Self)]"
 													using = tooltip_above
-													
+
 													button_icon_round_action = {
 														visible = "[Not(IsCurrentProductionMethod(ProductionMethod.Self))]"
 														size = { 46 46 }
 														onclick = "[Execute(ChangeAllConstructionSpeed(ProductionMethod.Self))]"
 														using = confirm_button_sound
 														enabled = "[IsValid(ChangeAllConstructionSpeed(ProductionMethod.Self))]"
-														
+
 														blockoverride "icon" {
 															texture = "[ProductionMethod.GetTexture]"
 														}
@@ -541,7 +553,7 @@ types budget
 															size = { 53% 53% }
 														}
 													}
-													
+
 													#selected PM
 													widget = {
 														size = { 46 46 }
@@ -569,7 +581,7 @@ types budget
 														parentanchor = bottom|hcenter
 														mirror = vertical
 														visible = "[IsCurrentProductionMethod(ProductionMethod.Self)]"
-														
+
 														state = {
 															name = _show
 															next = show_2
@@ -597,7 +609,7 @@ types budget
 															duration = 0.1
 															alpha = 1
 														}
-														
+
 														state = {
 															name = _hide
 															position = { 0 0 }
@@ -607,10 +619,26 @@ types budget
 													}
 												}
 											}
-										}	
+										}
 									}
 								}
 							}
+						}
+
+						tax_exp_frame = {
+							datacontext = "[GetPlayer]"
+							visible = "[GreaterThan_CFixedPoint(Country.GetShipConstructionGoodsExpenses, '(CFixedPoint)0')]"
+
+							blockoverride "text" {
+								text = "[concept_ship_construction]"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "@money![Negate(Country.GetShipConstructionGoodsExpenses)|D+]"
+								tooltip = "SHIP_CONSTRUCTION_GOODS_EXPENSES_BREAKDOWN"
+							}
+
+							blockoverride "divider" {}
 						}
 
 						tax_exp_frame_coin = {
@@ -634,11 +662,11 @@ types budget
 								onclick = "[Execute(GetPlayer.SetGovernmentWageLevelVeryLow)]"
 								enabled = "[GetPlayer.HasGovernmentWages]"
 							}
-							
+
 							blockoverride "button_2_click" {
 								onclick = "[Execute(GetPlayer.SetGovernmentWageLevelLow)]"
 								enabled = "[GetPlayer.HasGovernmentWages]"
-							}									
+							}
 
 							blockoverride "button_3_click" {
 								onclick = "[Execute(GetPlayer.SetGovernmentWageLevelMedium)]"
@@ -649,7 +677,7 @@ types budget
 								onclick = "[Execute(GetPlayer.SetGovernmentWageLevelHigh)]"
 								enabled = "[GetPlayer.HasGovernmentWages]"
 							}
-							
+
 							blockoverride "button_5_click" {
 								onclick = "[Execute(GetPlayer.SetGovernmentWageLevelVeryHigh)]"
 								enabled = "[GetPlayer.HasGovernmentWages]"
@@ -669,40 +697,40 @@ types budget
 							}
 							blockoverride "tooltip_5" {
 								tooltip = "[GetPlayer.GetGovernmentWageLevelDescVeryHigh]"
-							}									
+							}
 
-							blockoverride "is_selected_visibility_very_low" {
+							blockoverride "is_selected_visibility_1" {
 								visible = "[Not(IsValid(GetPlayer.SetGovernmentWageLevelVeryLow))]"
 							}
-							blockoverride "is_clickable_alpha_very_low" {
+							blockoverride "is_clickable_alpha_1" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetGovernmentWageLevelVeryLow))]"
 							}
 
-							blockoverride "is_selected_visibility_low" {
+							blockoverride "is_selected_visibility_2" {
 								visible = "[Not(IsValid(GetPlayer.SetGovernmentWageLevelLow))]"
 							}
-							blockoverride "is_clickable_alpha_low" {
+							blockoverride "is_clickable_alpha_2" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetGovernmentWageLevelLow))]"
 							}
 
-							blockoverride "is_selected_visibility_medium" {
+							blockoverride "is_selected_visibility_3" {
 								visible = "[Not(IsValid(GetPlayer.SetGovernmentWageLevelMedium))]"
 							}
-							blockoverride "is_clickable_alpha_medium" {
+							blockoverride "is_clickable_alpha_3" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetGovernmentWageLevelMedium))]"
 							}
 
-							blockoverride "is_selected_visibility_high" {
+							blockoverride "is_selected_visibility_4" {
 								visible = "[Not(IsValid(GetPlayer.SetGovernmentWageLevelHigh))]"
 							}
-							blockoverride "is_clickable_alpha_high" {
+							blockoverride "is_clickable_alpha_4" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetGovernmentWageLevelHigh))]"
 							}
 
-							blockoverride "is_selected_visibility_very_high" {
+							blockoverride "is_selected_visibility_5" {
 								visible = "[Not(IsValid(GetPlayer.SetGovernmentWageLevelVeryHigh))]"
 							}
-							blockoverride "is_clickable_alpha_very_high" {
+							blockoverride "is_clickable_alpha_5" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetGovernmentWageLevelVeryHigh))]"
 							}
 						}
@@ -736,8 +764,8 @@ types budget
 							}
 
 							blockoverride "divider" {}
-						}	
-						
+						}
+
 						tax_exp_frame_coin = {
 
 							blockoverride "tutorial_highilight_name" {
@@ -759,11 +787,11 @@ types budget
 								onclick = "[Execute(GetPlayer.SetMilitaryWageLevelVeryLow)]"
 								enabled = "[GetPlayer.HasMilitaryWages]"
 							}
-							
+
 							blockoverride "button_2_click" {
 								onclick = "[Execute(GetPlayer.SetMilitaryWageLevelLow)]"
 								enabled = "[GetPlayer.HasMilitaryWages]"
-							}									
+							}
 
 							blockoverride "button_3_click" {
 								onclick = "[Execute(GetPlayer.SetMilitaryWageLevelMedium)]"
@@ -774,7 +802,7 @@ types budget
 								onclick = "[Execute(GetPlayer.SetMilitaryWageLevelHigh)]"
 								enabled = "[GetPlayer.HasMilitaryWages]"
 							}
-							
+
 							blockoverride "button_5_click" {
 								onclick = "[Execute(GetPlayer.SetMilitaryWageLevelVeryHigh)]"
 								enabled = "[GetPlayer.HasMilitaryWages]"
@@ -796,38 +824,38 @@ types budget
 								tooltip = "[GetPlayer.GetMilitaryWageLevelDescVeryHigh]"
 							}
 
-							blockoverride "is_selected_visibility_very_low" {
+							blockoverride "is_selected_visibility_1" {
 								visible = "[Not(IsValid(GetPlayer.SetMilitaryWageLevelVeryLow))]"
 							}
-							blockoverride "is_clickable_alpha_very_low" {
+							blockoverride "is_clickable_alpha_1" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetMilitaryWageLevelVeryLow))]"
 							}
 
-							blockoverride "is_selected_visibility_low" {
+							blockoverride "is_selected_visibility_2" {
 								visible = "[Not(IsValid(GetPlayer.SetMilitaryWageLevelLow))]"
 							}
-							blockoverride "is_clickable_alpha_low" {
+							blockoverride "is_clickable_alpha_2" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetMilitaryWageLevelLow))]"
 							}
 
-							blockoverride "is_selected_visibility_medium" {
+							blockoverride "is_selected_visibility_3" {
 								visible = "[Not(IsValid(GetPlayer.SetMilitaryWageLevelMedium))]"
 							}
-							blockoverride "is_clickable_alpha_medium" {
+							blockoverride "is_clickable_alpha_3" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetMilitaryWageLevelMedium))]"
 							}
 
-							blockoverride "is_selected_visibility_high" {
+							blockoverride "is_selected_visibility_4" {
 								visible = "[Not(IsValid(GetPlayer.SetMilitaryWageLevelHigh))]"
 							}
-							blockoverride "is_clickable_alpha_high" {
+							blockoverride "is_clickable_alpha_4" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetMilitaryWageLevelHigh))]"
 							}
 
-							blockoverride "is_selected_visibility_very_high" {
+							blockoverride "is_selected_visibility_5" {
 								visible = "[Not(IsValid(GetPlayer.SetMilitaryWageLevelVeryHigh))]"
 							}
-							blockoverride "is_clickable_alpha_very_high" {
+							blockoverride "is_clickable_alpha_5" {
 								alpha = "[TransparentIfFalse(IsValid(GetPlayer.SetMilitaryWageLevelVeryHigh))]"
 							}
 						}
@@ -835,7 +863,7 @@ types budget
 						tax_exp_frame = {
 
 							blockoverride "text" {
-								text = "BUDGET_GOODS_FOR_MILITARY_BUILDINGS"
+								text = "[concept_budget_goods_for_military_upkeep]"
 							}
 
 							blockoverride "text_2" {
@@ -861,7 +889,55 @@ types budget
 							}
 
 							blockoverride "divider" {}
-						}			
+						}
+
+						tax_exp_frame = {
+							visible = "[GreaterThan_CFixedPoint(GetPlayer.GetSupplyShipMaintenanceExpenses, '(CFixedPoint)0')]"
+
+							blockoverride "text" {
+								text = "BUDGET_SUPPLY_SHIP_MAINTENANCE"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "#N @money!-[GetPlayer.GetSupplyShipMaintenanceExpenses|D-]"
+								using = supply_ship_maintenance_expense_tooltip
+								alpha = "[TransparentIfZero(GetPlayer.GetSupplyShipMaintenanceExpenses)]"
+							}
+
+							blockoverride "divider" {}
+						}
+
+						tax_exp_frame = {
+							visible = "[GreaterThan_CFixedPoint(GetPlayer.GetMilitaryShipMaintenanceExpenses, '(CFixedPoint)0')]"
+
+							blockoverride "text" {
+								text = "BUDGET_MILITARY_SHIP_MAINTENANCE"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "#N @money!-[GetPlayer.GetMilitaryShipMaintenanceExpenses|D-]"
+								using = military_ship_maintenance_expense_tooltip
+								alpha = "[TransparentIfZero(GetPlayer.GetMilitaryShipMaintenanceExpenses)]"
+							}
+
+							blockoverride "divider" {}
+						}
+
+						tax_exp_frame = {
+							visible = "[GreaterThan_CFixedPoint(GetPlayer.GetPortConnectionExpenses, '(CFixedPoint)0')]"
+
+							blockoverride "text" {
+								text = "BUDGET_PORT_CONNECTION_EXPENSE"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "#N @money!-[GetPlayer.GetPortConnectionExpenses|D-]"
+								using = port_connection_expense_tooltip
+								alpha = "[TransparentIfZero(GetPlayer.GetPortConnectionExpenses)]"
+							}
+
+							blockoverride "divider" {}
+						}
 
 						tax_exp_frame = {
 
@@ -874,7 +950,7 @@ types budget
 								using = welfare_payments_expense_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.GetWelfarePaymentsExpenses)]"
 							}
-						}					
+						}
 
 						tax_exp_frame = {
 
@@ -888,7 +964,7 @@ types budget
 								alpha = "[TransparentIfZero(GetPlayer.GetSubsidiesExpenses)]"
 							}
 						}
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -900,8 +976,8 @@ types budget
 								using = subventions_expense_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.GetSubventionsExpenses)]"
 							}
-						}						
-						
+						}
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -913,7 +989,7 @@ types budget
 								using = government_share_losses_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.PredictGovernmentShareLosses)]"
 							}
-						}						
+						}
 
 						tax_exp_frame = {
 
@@ -931,6 +1007,19 @@ types budget
 						tax_exp_frame = {
 
 							blockoverride "text" {
+								text = "BUDGET_TREATIES"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "#variable @money![GetPlayer.PredictTreatyExpenses|D-]#!"
+								using = treaty_expense_tooltip_with_graph
+								alpha = "[TransparentIfZero(GetPlayer.PredictTreatyExpenses)]"
+							}
+						}
+
+						tax_exp_frame = {
+
+							blockoverride "text" {
 								text = "BUDGET_INTEREST"
 							}
 
@@ -940,7 +1029,7 @@ types budget
 								alpha = "[TransparentIfZero(GetPlayer.GetInterestPayment)]"
 							}
 						}
-						
+
 						tax_exp_frame = {
 
 							blockoverride "text" {
@@ -952,7 +1041,7 @@ types budget
 								using = additional_expenses_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.GetModifier.GetValueFor('country_expenses_add'))]"
 							}
-						}								
+						}
 					}
 				}
 
@@ -974,7 +1063,7 @@ types budget
 						margin = { 10 0 }
 						margin_bottom = 10
 						text = "[GetPlayer.GetAverageStateTaxCollectionMultBreakdown]"
-					}				
+					}
 				}
 			}
 
@@ -988,7 +1077,7 @@ types budget
 					name = _show
 					on_start = "[BudgetPanel.GetMapModeList.SelectByKey('mm_state')]"
 				}
-				
+
 				flowcontainer = {
 					using = default_list_position
 					direction = vertical
@@ -997,7 +1086,7 @@ types budget
 					### sort buttons
 					widget = {
 						size = { @panel_width 30 }
-						
+
 						hbox = {
 
 							sort_button = {
@@ -1005,10 +1094,10 @@ types budget
 								layoutpolicy_horizontal = expanding
 								size = { 0 30 }
 								onclick = "[AccessPlayer.SortStates('name')]"
-								
+
 								text = "STATE_TITLE"
 								align = left|nobaseline
-								
+
 								tooltip = STATE_EXPLAINER
 							}
 
@@ -1017,10 +1106,10 @@ types budget
 								layoutpolicy_horizontal = expanding
 								size = { 0 30 }
 								onclick = "[AccessPlayer.SortStates('averagepopwage')]"
-								
+
 								text = "WAGES"
 								align = right|nobaseline
-								
+
 								tooltip = AVERAGE_POP_WAGE_EXPLAINER
 							}
 
@@ -1029,10 +1118,10 @@ types budget
 								layoutpolicy_horizontal = expanding
 								size = { 0 30 }
 								onclick = "[AccessPlayer.SortStates('governmentexpenses')]"
-								
+
 								text = "EXPENSES"
 								align = right|nobaseline
-								
+
 								tooltip = EXPENSES_EXPLAINER
 							}
 
@@ -1041,10 +1130,10 @@ types budget
 								layoutpolicy_horizontal = expanding
 								size = { 0 30 }
 								onclick = "[AccessPlayer.SortStates('taxrevenue')]"
-								
+
 								align = right|nobaseline
 								text = "TAXES"
-								
+
 								tooltip = STATE_INCOME_TAX_REVENUE_EXPLAINER
 							}
 						}
@@ -1066,16 +1155,16 @@ types budget
 
 								hbox = {
 									margin = { 8 0 }
-									
+
 									textbox = {
 										layoutstretchfactor_horizontal = 2.5
 										layoutpolicy_horizontal = expanding
 										size = { 0 50 }
 										margin_left = 3
-										
+
 										align = left|nobaseline
 										raw_text = "#bold [State.GetNameNoFormatting]#!"
-										
+
 										multiline = yes
 
 										tooltipwidget = {
@@ -1086,7 +1175,7 @@ types budget
 										layoutstretchfactor_horizontal = 1
 										layoutpolicy_horizontal = expanding
 										size = { 0 40 }
-										
+
 										align = right|nobaseline
 										raw_text = "@money![State.GetAverageAnnualWage|vD]"
 										tooltip = "[State.GetAverageAnnualWageDesc]"
@@ -1096,7 +1185,7 @@ types budget
 										layoutstretchfactor_horizontal = 1
 										layoutpolicy_horizontal = expanding
 										size = { 0 40 }
-										
+
 										align = right|nobaseline
 										raw_text = "#variable @money![State.GetGovernmentExpenses|+d]#!"
 										using = state_government_expenses_with_table
@@ -1107,7 +1196,7 @@ types budget
 										layoutstretchfactor_horizontal = 1
 										layoutpolicy_horizontal = expanding
 										size = { 0 40 }
-										
+
 										align = right|nobaseline
 										raw_text = "#variable @money![State.GetTaxationRevenue|=+D]#!"
 										alpha = "[TransparentIfZero(State.GetTaxationRevenue)]"
@@ -1123,7 +1212,7 @@ types budget
 
 			### ASSETS
 			flowcontainer = {
-				visible = "[InformationPanel.IsTabSelected('assets')]"			
+				visible = "[InformationPanel.IsTabSelected('assets')]"
 				using = default_content_fade
 				direction = vertical
 				using = default_list_position
@@ -1139,23 +1228,23 @@ types budget
 					spacing = 10
 					direction = vertical
 					using = default_list_position
-					
+
 					widget = {
 						size = { @panel_width_minus_10 45 }
 						parentanchor = hcenter
 						tooltip = "[AccessPlayer.GetGoldProgressDesc]"
-					
+
 						gold_progressbar_horizontal = {
 							parentanchor = vcenter
 							name = "gold_progressbar"
 							size = { 100% 100% }
 							blockoverride "values" {
 								value = "[FixedPointToFloat(GetPlayer.GetGoldReserveRatio )]"
-								min = 0  
+								min = 0
 								max = 1
 							}
 						}
-						
+
 						textbox = {
 							text = "RESERVES"
 							autoresize = yes
@@ -1174,7 +1263,7 @@ types budget
 							align = right|nobaseline
 							margin_right = 20
 						}
-						
+
 						textbox = {
 							visible = "[Not(GreaterThan_CFixedPoint( GetPlayer.GetGoldReserveRatio, '(CFixedPoint)0' ))]"
 							using = fontsize_large
@@ -1183,20 +1272,20 @@ types budget
 							parentanchor = right|vcenter
 							align = right|nobaseline
 							margin_right = 20
-						}						
+						}
 					}
 				}
-				
+
 				default_header = {
 					blockoverride "text" {
 						text = "[concept_investment_pool]"
 					}
-				}					
-				
+				}
+
 				widget = {
 					size = { @panel_width 60 }
 					parentanchor = hcenter
-					
+
 					background = {
 						using = entry_bg
 					}
@@ -1219,13 +1308,13 @@ types budget
 						using = investment_pool_tooltip_with_graph
 					}
 				}
-				
+
 				default_header = {
 					blockoverride "text" {
 						text = "DOMESTIC_LOANS"
 					}
 				}
-				
+
 				button = {
 					datacontext = "[GetPlayer]"
 					using = default_button_action
@@ -1236,8 +1325,8 @@ types budget
 					tooltip = "DECLARE_BANKRUPTCY_TOOLTIP"
 					using = tooltip_below
 					parentanchor = hcenter
-				}								
-				
+				}
+
 				flowcontainer = {
 					direction = horizontal
 					spacing = 20
@@ -1260,7 +1349,7 @@ types budget
 						parentanchor = vcenter
 					}
 				}
-				
+
 				widget = {
 					name = "tutorial_highilight_principal_bar"
 					size = { @panel_width_minus_10 45 }
@@ -1274,7 +1363,7 @@ types budget
 						size = { 100% 100% }
 						blockoverride "values" {
 							value = "[FixedPointToFloat(GetPlayer.GetCreditRatio)]"
-							min = 0  
+							min = 0
 							max = 1
 						}
 					}
@@ -1295,14 +1384,14 @@ types budget
 						align = right|nobaseline
 						margin_right = 20
 					}
-				}				
+				}
 
 				widget = {
 					name = "tutorial_highlight_credit_limit_bar"
 					size = { @panel_width 60 }
 					parentanchor = hcenter
 					tooltip = "[GetPlayer.GetCreditTooltip]"
-					
+
 					background = {
 						using = entry_bg
 					}
@@ -1325,7 +1414,6 @@ types budget
 						margin_right = 20
 					}
 				}
-
 				### STATE-OWNED INDUSTRY (mod: state_assets_viz v1.2)
 				default_header = {
 					blockoverride "text" {
@@ -1791,9 +1879,7 @@ types budget
 						parentanchor = vcenter
 					}
 				}
-
-				}
-
+			}
 			### CAPITAL (4th tab, mod: state_assets_viz v1.3)
 			flowcontainer = {
 				visible = "[InformationPanel.IsTabSelected('capital')]"
@@ -2647,7 +2733,6 @@ types budget
 				}
 
 			}
-
 		}
 	}
 
@@ -2667,7 +2752,7 @@ types budget
 				max_width = 230
 				multiline = yes
 				block "text_upper" {
-					raw_text = "Upper text" 
+					raw_text = "Upper text"
 				}
 				parentanchor = left
 				elide = right
@@ -2695,7 +2780,7 @@ types budget
 				parentanchor = vcenter
 			}
 		}
-		
+
 		textbox = {
 			autoresize = yes
 			block "text_money" {
@@ -2704,7 +2789,7 @@ types budget
 			parentanchor = right|vcenter
 			margin_bottom = 6
 		}
-		
+
 		block "divider" {
 			divider_clean = {}
 		}
@@ -2722,7 +2807,7 @@ types budget
 			elide = right
 			margin_bottom = 6
 		}
-		
+
 		textbox = {
 			autoresize = yes
 			block "text_2" {
@@ -2731,19 +2816,19 @@ types budget
 			parentanchor = right|vcenter
 			margin_bottom = 6
 		}
-		
+
 		block "divider" {
 			divider_clean = {}
 		}
 	}
-	
+
 	### SET LEVEL BAR ITEM
 	type set_level_bar_item = widget {
 		block "size" {
 			size = { 35 32 }
 		}
 
-		using = tooltip_above
+		using = tooltip_se
 
 		### BUTTON
 		button = {
@@ -2776,7 +2861,7 @@ types budget
 			parentanchor = center
 
 			block "is_selected_visibility" {}
-			
+
 			state = {
 				name = _show
 				duration = 0.35
@@ -2792,7 +2877,7 @@ types budget
 				using = highlighted_square_selection
 			}
 		}
-		
+
 		### SELECTED (icon)
 		button = {
 			block "button_texture" {}
@@ -2806,7 +2891,7 @@ types budget
 			parentanchor = center
 		}
 	}
-	
+
 	### SET LEVEL BAR (export tariffs)
 	type set_level_bar_export_tariffs = flowcontainer {
 		using = set_level_bar_background
@@ -2814,7 +2899,7 @@ types budget
 		### Max tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportTariffsDescMax(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/max_tariffs.dds"
 			}
@@ -2824,17 +2909,17 @@ types budget
 				using = decrease_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportTariffsMax(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportTariffsMax(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportTariffsMax(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportTariffsMax(Goods.Self)))]"
 			}
 		}
-		
+
 		### High tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportTariffsDescHigh(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/high_tariffs.dds"
 			}
@@ -2844,17 +2929,17 @@ types budget
 				using = decrease_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportTariffsHigh(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportTariffsHigh(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportTariffsHigh(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportTariffsHigh(Goods.Self)))]"
 			}
 		}
 
 		### Low tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportTariffsDescLow(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/low_tariffs.dds"
 			}
@@ -2864,17 +2949,17 @@ types budget
 				using = decrease_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportTariffsLow(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportTariffsLow(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportTariffsLow(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportTariffsLow(Goods.Self)))]"
 			}
 		}
 
 		### No tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportTariffsDescNone(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/no_tariffs_no_subvention.dds"
 			}
@@ -2884,17 +2969,17 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportTariffsNone(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportTariffsNone(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportTariffsNone(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportTariffsNone(Goods.Self)))]"
 			}
 		}
-		
+
 		### Low subventions
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportSubventionsDescLow(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/low_subvention.dds"
 			}
@@ -2904,17 +2989,17 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportSubventionsLow(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportSubventionsLow(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportSubventionsLow(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportSubventionsLow(Goods.Self)))]"
 			}
-		}		
-		
+		}
+
 		### High subventions
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportSubventionsDescHigh(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/high_subvention.dds"
 			}
@@ -2924,18 +3009,18 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportSubventionsHigh(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportSubventionsHigh(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportSubventionsHigh(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportSubventionsHigh(Goods.Self)))]"
 			}
-		}	
+		}
 
 
 		### Max subventions
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetExportSubventionsDescMax(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/max_subvention.dds"
 			}
@@ -2945,14 +3030,14 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasExportSubventionsMax(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasExportSubventionsMax(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetExportSubventionsMax(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetExportSubventionsMax(Goods.Self)))]"
 			}
-		}		
+		}
 	}
-	
+
 	### SET LEVEL BAR (import tariffs)
 	type set_level_bar_import_tariffs = flowcontainer {
 		using = set_level_bar_background
@@ -2960,7 +3045,7 @@ types budget
 		### Max tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportTariffsDescMax(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/max_tariffs.dds"
 			}
@@ -2970,17 +3055,17 @@ types budget
 				using = decrease_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportTariffsMax(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportTariffsMax(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportTariffsMax(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportTariffsMax(Goods.Self)))]"
 			}
 		}
-		
+
 		### High tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportTariffsDescHigh(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/high_tariffs.dds"
 			}
@@ -2990,17 +3075,17 @@ types budget
 				using = decrease_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportTariffsHigh(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportTariffsHigh(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportTariffsHigh(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportTariffsHigh(Goods.Self)))]"
 			}
 		}
 
 		### Low tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportTariffsDescLow(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/low_tariffs.dds"
 			}
@@ -3010,17 +3095,17 @@ types budget
 				using = decrease_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportTariffsLow(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportTariffsLow(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportTariffsLow(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportTariffsLow(Goods.Self)))]"
 			}
 		}
 
 		### No tariffs
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportTariffsDescNone(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/no_tariffs_no_subvention.dds"
 			}
@@ -3030,17 +3115,17 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportTariffsNone(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportTariffsNone(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportTariffsNone(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportTariffsNone(Goods.Self)))]"
 			}
 		}
-		
+
 		### Low subventions
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportSubventionsDescLow(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/low_subvention.dds"
 			}
@@ -3050,17 +3135,17 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportSubventionsLow(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportSubventionsLow(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportSubventionsLow(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportSubventionsLow(Goods.Self)))]"
 			}
-		}		
-		
+		}
+
 		### High subventions
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportSubventionsDescHigh(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/high_subvention.dds"
 			}
@@ -3070,18 +3155,18 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportSubventionsHigh(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportSubventionsHigh(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportSubventionsHigh(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportSubventionsHigh(Goods.Self)))]"
 			}
-		}	
+		}
 
 
 		### Max subventions
 		set_level_bar_item = {
 			tooltip = "[SelectLocalization(Goods.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket), GetPlayer.GetImportSubventionsDescMax(Goods.Self), 'NOT_PLAYER_MARKET_PRIORITY')]"
-			
+
 			blockoverride "button_texture" {
 				texture = "gfx/interface/icons/trade_icons/max_subvention.dds"
 			}
@@ -3091,14 +3176,14 @@ types budget
 				using = increase_button_sound
 			}
 			blockoverride "is_selected_visibility" {
-				visible = "[GetPlayer.HasImportSubventionsMax(Goods.Self)]"
+				visible = "[Goods.GetMarket.GetOwner.HasImportSubventionsMax(Goods.Self)]"
 			}
 			blockoverride "is_clickable_alpha" {
-				alpha = "[TransparentIfFalse(IsValid( GetPlayer.SetImportSubventionsMax(Goods.Self)))]"
+				alpha = "[TransparentIfFalse(IsValid( Goods.GetMarket.GetOwner.SetImportSubventionsMax(Goods.Self)))]"
 			}
-		}		
-	}	
-		
+		}
+	}
+
 	### SET LEVEL BAR (budget tax)
 	type set_level_bar = flowcontainer {
 
@@ -3107,115 +3192,171 @@ types budget
 		block "tutorial_highilight_name" {
 			name = "tutorial_highlight_name"
 		}
-			
+
 		### VERY LOW
 		set_level_bar_item = {
+			block "visibility_1" {}
+
 			block "tooltip_1" {
 				tooltip = "[GetPlayer.GetTaxLevelDescVeryLow]"
 			}
+
 			blockoverride "button_texture" {
-				texture = "gfx/interface/budget/budget_set_very_low.dds"
+				block "texture_1" {
+					texture = "gfx/interface/budget/budget_set_very_low.dds"
+				}
 			}
+
 			blockoverride "click" {
-				using = budget_coins_lvl_1_button_sound
+				block "clicksound_1" {
+					using = budget_coins_lvl_1_button_sound
+				}
+
 				block "button_1_click" {
 					onclick = "[Execute(GetPlayer.SetTaxLevelVeryLow)]"
 					enabled = "[GetPlayer.HasAnyTaxes]"
 				}
 			}
+
 			blockoverride "is_selected_visibility" {
-				block "is_selected_visibility_very_low" {}
+				block "is_selected_visibility_1" {}
 			}
+
 			blockoverride "is_clickable_alpha" {
-				block "is_clickable_alpha_very_low" {}
+				block "is_clickable_alpha_1" {}
 			}
 		}
+
 		### LOW
 		set_level_bar_item = {
+			block "visibility_2" {}
+
 			block "tooltip_2" {
 				tooltip = "[GetPlayer.GetTaxLevelDescLow]"
 			}
+
 			blockoverride "button_texture" {
-				texture = "gfx/interface/budget/budget_set_low.dds"
+				block "texture_2" {
+					texture = "gfx/interface/budget/budget_set_low.dds"
+				}
 			}
+
 			blockoverride "click" {
-				using = budget_coins_lvl_2_button_sound
+				block "clicksound_2" {
+					using = budget_coins_lvl_2_button_sound
+				}
+
 				block "button_2_click" {
 					onclick = "[Execute(GetPlayer.SetTaxLevelLow)]"
 					enabled = "[GetPlayer.HasAnyTaxes]"
 				}
 			}
+
 			blockoverride "is_selected_visibility" {
-				block "is_selected_visibility_low" {}
+				block "is_selected_visibility_2" {}
 			}
+
 			blockoverride "is_clickable_alpha" {
-				block "is_clickable_alpha_low" {}
+				block "is_clickable_alpha_2" {}
 			}
 		}
 		### MEDIUM
 		set_level_bar_item = {
+			block "visibility_3" {}
+
 			block "tooltip_3" {
 				tooltip = "[GetPlayer.GetTaxLevelDescMedium]"
 			}
+
 			blockoverride "button_texture" {
-				texture = "gfx/interface/budget/budget_set_medium.dds"
+				block "texture_3" {
+					texture = "gfx/interface/budget/budget_set_medium.dds"
+				}
 			}
+
 			blockoverride "click" {
-				using = budget_coins_lvl_3_button_sound
+				block "clicksound_3" {
+					using = budget_coins_lvl_3_button_sound
+				}
+
 				block "button_3_click" {
 					onclick = "[Execute(GetPlayer.SetTaxLevelMedium)]"
 					enabled = "[GetPlayer.HasAnyTaxes]"
 				}
 			}
+
 			blockoverride "is_selected_visibility" {
-				block "is_selected_visibility_medium" {}
+				block "is_selected_visibility_3" {}
 			}
+
 			blockoverride "is_clickable_alpha" {
-				block "is_clickable_alpha_medium" {}
+				block "is_clickable_alpha_3" {}
 			}
 		}
 		### HIGH
 		set_level_bar_item = {
+			block "visibility_4" {}
+
 			block "tooltip_4" {
 				tooltip = "[GetPlayer.GetTaxLevelDescHigh]"
 			}
+
 			blockoverride "button_texture" {
-				texture = "gfx/interface/budget/budget_set_high.dds"
+				block "texture_4" {
+					texture = "gfx/interface/budget/budget_set_high.dds"
+				}
 			}
+
 			blockoverride "click" {
-				using = budget_coins_lvl_4_button_sound
+				block "clicksound_4" {
+					using = budget_coins_lvl_4_button_sound
+				}
+
 				block "button_4_click" {
 					onclick = "[Execute(GetPlayer.SetTaxLevelHigh)]"
 					enabled = "[GetPlayer.HasAnyTaxes]"
 				}
 			}
+
 			blockoverride "is_selected_visibility" {
-				block "is_selected_visibility_high" {}
+				block "is_selected_visibility_4" {}
 			}
+
 			blockoverride "is_clickable_alpha" {
-				block "is_clickable_alpha_high" {}
+				block "is_clickable_alpha_4" {}
 			}
 		}
 		### VERY HIGH
 		set_level_bar_item = {
+			block "visibility_5" {}
+
 			block "tooltip_5" {
 				tooltip = "[GetPlayer.GetTaxLevelDescVeryHigh]"
 			}
+
 			blockoverride "button_texture" {
-				texture = "gfx/interface/budget/budget_set_very_high.dds"
+				block "texture_5" {
+					texture = "gfx/interface/budget/budget_set_very_high.dds"
+				}
 			}
+
 			blockoverride "click" {
-				using = budget_coins_lvl_5_button_sound
+				block "clicksound_5" {
+					using = budget_coins_lvl_5_button_sound
+				}
+
 				block "button_5_click" {
 					onclick = "[Execute(GetPlayer.SetTaxLevelVeryHigh)]"
 					enabled = "[GetPlayer.HasAnyTaxes]"
 				}
 			}
+
 			blockoverride "is_selected_visibility" {
-				block "is_selected_visibility_very_high" {}
+				block "is_selected_visibility_5" {}
 			}
+
 			blockoverride "is_clickable_alpha" {
-				block "is_clickable_alpha_very_high" {}
+				block "is_clickable_alpha_5" {}
 			}
 		}
 	}
