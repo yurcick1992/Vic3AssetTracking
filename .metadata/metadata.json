@@ -1,7 +1,7 @@
 {
-	"name": "State Assets and National Capital Tracking v1.3.2",
+	"name": "State Assets and National Capital Tracking v1.3.3",
 	"id": "state_assets_viz",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"supported_game_version": "1.13.*",
 	"short_description": "Adds State-Owned Industry, Government Net Worth, National Assets, and National Capital tables to the Budget panel with historical snapshots and deltas.",
 	"tags": [

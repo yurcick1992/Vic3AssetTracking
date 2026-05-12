@@ -124,7 +124,10 @@ inv_count_national_assets_effect = {
 # ─── DELTAS ───
 # Compute deltas between start-of-year (year_0) and historical snapshots (year_1/2/5).
 # Level deltas are absolute (year_0 - year_X). Monetary deltas are percentage
-# ((year_0 / year_X - 1) x 100). Division by zero yields 0 in Jomini.
+# ((year_0 / year_X - 1) x 100), guarded against div/0 by check_variable on the
+# denominator. When the denominator is 0, the delta is set to 0 (Jomini does not
+# log an error from a guarded skip, unlike an unguarded division). The GUI shows
+# the value with "(+0)" in that case — see CLAUDE.md for the dash-display follow-up.
 # Must be called in country scope after current values have been updated.
 inv_compute_deltas_effect = {
 	# ── Snapshot ages (for GUI: show dashes until real data exists) ──
@@ -137,7 +140,7 @@ inv_compute_deltas_effect = {
 	set_variable = { name = snap_age_5 value = var:snap_year_0 }
 	change_variable = { name = snap_age_5 subtract = var:snap_year_5 }
 
-	# ── Gov level deltas (year_0 minus year_X) ──
+	# ── Gov level deltas (year_0 minus year_X — subtraction, no div/0 risk) ──
 	set_variable = { name = gov_levels_delta_y1 value = var:gov_levels_year_0 }
 	change_variable = { name = gov_levels_delta_y1 subtract = var:gov_levels_year_1 }
 
@@ -147,55 +150,91 @@ inv_compute_deltas_effect = {
 	set_variable = { name = gov_levels_delta_y5 value = var:gov_levels_year_0 }
 	change_variable = { name = gov_levels_delta_y5 subtract = var:gov_levels_year_5 }
 
-	# ── Gov value % deltas ──
-	set_variable = { name = gov_value_delta_y1 value = var:gov_value_year_0 }
-	change_variable = { name = gov_value_delta_y1 divide = var:gov_value_year_1 }
-	change_variable = { name = gov_value_delta_y1 subtract = 1 }
-	change_variable = { name = gov_value_delta_y1 multiply = 100 }
+	# ── Gov value % deltas (guarded) ──
+	if = {
+		limit = { NOT = { check_variable = { which = gov_value_year_1 value = 0 } } }
+		set_variable = { name = gov_value_delta_y1 value = var:gov_value_year_0 }
+		change_variable = { name = gov_value_delta_y1 divide = var:gov_value_year_1 }
+		change_variable = { name = gov_value_delta_y1 subtract = 1 }
+		change_variable = { name = gov_value_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = gov_value_delta_y1 value = 0 } }
 
-	set_variable = { name = gov_value_delta_y2 value = var:gov_value_year_0 }
-	change_variable = { name = gov_value_delta_y2 divide = var:gov_value_year_2 }
-	change_variable = { name = gov_value_delta_y2 subtract = 1 }
-	change_variable = { name = gov_value_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = gov_value_year_2 value = 0 } } }
+		set_variable = { name = gov_value_delta_y2 value = var:gov_value_year_0 }
+		change_variable = { name = gov_value_delta_y2 divide = var:gov_value_year_2 }
+		change_variable = { name = gov_value_delta_y2 subtract = 1 }
+		change_variable = { name = gov_value_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = gov_value_delta_y2 value = 0 } }
 
-	set_variable = { name = gov_value_delta_y5 value = var:gov_value_year_0 }
-	change_variable = { name = gov_value_delta_y5 divide = var:gov_value_year_5 }
-	change_variable = { name = gov_value_delta_y5 subtract = 1 }
-	change_variable = { name = gov_value_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = gov_value_year_5 value = 0 } } }
+		set_variable = { name = gov_value_delta_y5 value = var:gov_value_year_0 }
+		change_variable = { name = gov_value_delta_y5 divide = var:gov_value_year_5 }
+		change_variable = { name = gov_value_delta_y5 subtract = 1 }
+		change_variable = { name = gov_value_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = gov_value_delta_y5 value = 0 } }
 
-	# ── Treasury % deltas ──
-	set_variable = { name = treasury_delta_y1 value = var:treasury_year_0 }
-	change_variable = { name = treasury_delta_y1 divide = var:treasury_year_1 }
-	change_variable = { name = treasury_delta_y1 subtract = 1 }
-	change_variable = { name = treasury_delta_y1 multiply = 100 }
+	# ── Treasury % deltas (guarded; treasury can be negative — guard on != 0) ──
+	if = {
+		limit = { NOT = { check_variable = { which = treasury_year_1 value = 0 } } }
+		set_variable = { name = treasury_delta_y1 value = var:treasury_year_0 }
+		change_variable = { name = treasury_delta_y1 divide = var:treasury_year_1 }
+		change_variable = { name = treasury_delta_y1 subtract = 1 }
+		change_variable = { name = treasury_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = treasury_delta_y1 value = 0 } }
 
-	set_variable = { name = treasury_delta_y2 value = var:treasury_year_0 }
-	change_variable = { name = treasury_delta_y2 divide = var:treasury_year_2 }
-	change_variable = { name = treasury_delta_y2 subtract = 1 }
-	change_variable = { name = treasury_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = treasury_year_2 value = 0 } } }
+		set_variable = { name = treasury_delta_y2 value = var:treasury_year_0 }
+		change_variable = { name = treasury_delta_y2 divide = var:treasury_year_2 }
+		change_variable = { name = treasury_delta_y2 subtract = 1 }
+		change_variable = { name = treasury_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = treasury_delta_y2 value = 0 } }
 
-	set_variable = { name = treasury_delta_y5 value = var:treasury_year_0 }
-	change_variable = { name = treasury_delta_y5 divide = var:treasury_year_5 }
-	change_variable = { name = treasury_delta_y5 subtract = 1 }
-	change_variable = { name = treasury_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = treasury_year_5 value = 0 } } }
+		set_variable = { name = treasury_delta_y5 value = var:treasury_year_0 }
+		change_variable = { name = treasury_delta_y5 divide = var:treasury_year_5 }
+		change_variable = { name = treasury_delta_y5 subtract = 1 }
+		change_variable = { name = treasury_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = treasury_delta_y5 value = 0 } }
 
-	# ── Net worth % deltas ──
-	set_variable = { name = total_delta_y1 value = var:total_year_0 }
-	change_variable = { name = total_delta_y1 divide = var:total_year_1 }
-	change_variable = { name = total_delta_y1 subtract = 1 }
-	change_variable = { name = total_delta_y1 multiply = 100 }
+	# ── Net worth % deltas (guarded; total can be negative — guard on != 0) ──
+	if = {
+		limit = { NOT = { check_variable = { which = total_year_1 value = 0 } } }
+		set_variable = { name = total_delta_y1 value = var:total_year_0 }
+		change_variable = { name = total_delta_y1 divide = var:total_year_1 }
+		change_variable = { name = total_delta_y1 subtract = 1 }
+		change_variable = { name = total_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = total_delta_y1 value = 0 } }
 
-	set_variable = { name = total_delta_y2 value = var:total_year_0 }
-	change_variable = { name = total_delta_y2 divide = var:total_year_2 }
-	change_variable = { name = total_delta_y2 subtract = 1 }
-	change_variable = { name = total_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = total_year_2 value = 0 } } }
+		set_variable = { name = total_delta_y2 value = var:total_year_0 }
+		change_variable = { name = total_delta_y2 divide = var:total_year_2 }
+		change_variable = { name = total_delta_y2 subtract = 1 }
+		change_variable = { name = total_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = total_delta_y2 value = 0 } }
 
-	set_variable = { name = total_delta_y5 value = var:total_year_0 }
-	change_variable = { name = total_delta_y5 divide = var:total_year_5 }
-	change_variable = { name = total_delta_y5 subtract = 1 }
-	change_variable = { name = total_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = total_year_5 value = 0 } } }
+		set_variable = { name = total_delta_y5 value = var:total_year_0 }
+		change_variable = { name = total_delta_y5 divide = var:total_year_5 }
+		change_variable = { name = total_delta_y5 subtract = 1 }
+		change_variable = { name = total_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = total_delta_y5 value = 0 } }
 
-	# ── Domestic level deltas (year_0 minus year_X) — Capital tab Table 1 ──
+	# ── Domestic level deltas (subtraction, no div/0) ──
 	set_variable = { name = nat_dom_levels_delta_y1 value = var:nat_dom_levels_year_0 }
 	change_variable = { name = nat_dom_levels_delta_y1 subtract = var:nat_dom_levels_year_1 }
 
@@ -205,7 +244,7 @@ inv_compute_deltas_effect = {
 	set_variable = { name = nat_dom_levels_delta_y5 value = var:nat_dom_levels_year_0 }
 	change_variable = { name = nat_dom_levels_delta_y5 subtract = var:nat_dom_levels_year_5 }
 
-	# ── Foreign level deltas (year_0 minus year_X) — Capital tab Table 1 ──
+	# ── Foreign level deltas (subtraction, no div/0) ──
 	set_variable = { name = nat_for_levels_delta_y1 value = var:nat_for_levels_year_0 }
 	change_variable = { name = nat_for_levels_delta_y1 subtract = var:nat_for_levels_year_1 }
 
@@ -215,7 +254,7 @@ inv_compute_deltas_effect = {
 	set_variable = { name = nat_for_levels_delta_y5 value = var:nat_for_levels_year_0 }
 	change_variable = { name = nat_for_levels_delta_y5 subtract = var:nat_for_levels_year_5 }
 
-	# ── Sum level deltas (year_0 minus year_X) — Capital tab Table 1 ──
+	# ── Sum level deltas (subtraction, no div/0) ──
 	set_variable = { name = nat_sum_levels_delta_y1 value = var:nat_sum_levels_year_0 }
 	change_variable = { name = nat_sum_levels_delta_y1 subtract = var:nat_sum_levels_year_1 }
 
@@ -225,85 +264,145 @@ inv_compute_deltas_effect = {
 	set_variable = { name = nat_sum_levels_delta_y5 value = var:nat_sum_levels_year_0 }
 	change_variable = { name = nat_sum_levels_delta_y5 subtract = var:nat_sum_levels_year_5 }
 
-	# ── Domestic value % deltas — Capital tab Table 2 ──
-	set_variable = { name = nat_dom_value_delta_y1 value = var:nat_dom_value_year_0 }
-	change_variable = { name = nat_dom_value_delta_y1 divide = var:nat_dom_value_year_1 }
-	change_variable = { name = nat_dom_value_delta_y1 subtract = 1 }
-	change_variable = { name = nat_dom_value_delta_y1 multiply = 100 }
+	# ── Domestic value % deltas (guarded) ──
+	if = {
+		limit = { NOT = { check_variable = { which = nat_dom_value_year_1 value = 0 } } }
+		set_variable = { name = nat_dom_value_delta_y1 value = var:nat_dom_value_year_0 }
+		change_variable = { name = nat_dom_value_delta_y1 divide = var:nat_dom_value_year_1 }
+		change_variable = { name = nat_dom_value_delta_y1 subtract = 1 }
+		change_variable = { name = nat_dom_value_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_dom_value_delta_y1 value = 0 } }
 
-	set_variable = { name = nat_dom_value_delta_y2 value = var:nat_dom_value_year_0 }
-	change_variable = { name = nat_dom_value_delta_y2 divide = var:nat_dom_value_year_2 }
-	change_variable = { name = nat_dom_value_delta_y2 subtract = 1 }
-	change_variable = { name = nat_dom_value_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = nat_dom_value_year_2 value = 0 } } }
+		set_variable = { name = nat_dom_value_delta_y2 value = var:nat_dom_value_year_0 }
+		change_variable = { name = nat_dom_value_delta_y2 divide = var:nat_dom_value_year_2 }
+		change_variable = { name = nat_dom_value_delta_y2 subtract = 1 }
+		change_variable = { name = nat_dom_value_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_dom_value_delta_y2 value = 0 } }
 
-	set_variable = { name = nat_dom_value_delta_y5 value = var:nat_dom_value_year_0 }
-	change_variable = { name = nat_dom_value_delta_y5 divide = var:nat_dom_value_year_5 }
-	change_variable = { name = nat_dom_value_delta_y5 subtract = 1 }
-	change_variable = { name = nat_dom_value_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = nat_dom_value_year_5 value = 0 } } }
+		set_variable = { name = nat_dom_value_delta_y5 value = var:nat_dom_value_year_0 }
+		change_variable = { name = nat_dom_value_delta_y5 divide = var:nat_dom_value_year_5 }
+		change_variable = { name = nat_dom_value_delta_y5 subtract = 1 }
+		change_variable = { name = nat_dom_value_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_dom_value_delta_y5 value = 0 } }
 
-	# ── Foreign value % deltas — Capital tab Table 2 ──
-	set_variable = { name = nat_for_value_delta_y1 value = var:nat_for_value_year_0 }
-	change_variable = { name = nat_for_value_delta_y1 divide = var:nat_for_value_year_1 }
-	change_variable = { name = nat_for_value_delta_y1 subtract = 1 }
-	change_variable = { name = nat_for_value_delta_y1 multiply = 100 }
+	# ── Foreign value % deltas (guarded) ──
+	if = {
+		limit = { NOT = { check_variable = { which = nat_for_value_year_1 value = 0 } } }
+		set_variable = { name = nat_for_value_delta_y1 value = var:nat_for_value_year_0 }
+		change_variable = { name = nat_for_value_delta_y1 divide = var:nat_for_value_year_1 }
+		change_variable = { name = nat_for_value_delta_y1 subtract = 1 }
+		change_variable = { name = nat_for_value_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_for_value_delta_y1 value = 0 } }
 
-	set_variable = { name = nat_for_value_delta_y2 value = var:nat_for_value_year_0 }
-	change_variable = { name = nat_for_value_delta_y2 divide = var:nat_for_value_year_2 }
-	change_variable = { name = nat_for_value_delta_y2 subtract = 1 }
-	change_variable = { name = nat_for_value_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = nat_for_value_year_2 value = 0 } } }
+		set_variable = { name = nat_for_value_delta_y2 value = var:nat_for_value_year_0 }
+		change_variable = { name = nat_for_value_delta_y2 divide = var:nat_for_value_year_2 }
+		change_variable = { name = nat_for_value_delta_y2 subtract = 1 }
+		change_variable = { name = nat_for_value_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_for_value_delta_y2 value = 0 } }
 
-	set_variable = { name = nat_for_value_delta_y5 value = var:nat_for_value_year_0 }
-	change_variable = { name = nat_for_value_delta_y5 divide = var:nat_for_value_year_5 }
-	change_variable = { name = nat_for_value_delta_y5 subtract = 1 }
-	change_variable = { name = nat_for_value_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = nat_for_value_year_5 value = 0 } } }
+		set_variable = { name = nat_for_value_delta_y5 value = var:nat_for_value_year_0 }
+		change_variable = { name = nat_for_value_delta_y5 divide = var:nat_for_value_year_5 }
+		change_variable = { name = nat_for_value_delta_y5 subtract = 1 }
+		change_variable = { name = nat_for_value_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_for_value_delta_y5 value = 0 } }
 
-	# ── Sum value % deltas — Capital tab Tables 2-3 ──
-	set_variable = { name = nat_sum_value_delta_y1 value = var:nat_sum_value_year_0 }
-	change_variable = { name = nat_sum_value_delta_y1 divide = var:nat_sum_value_year_1 }
-	change_variable = { name = nat_sum_value_delta_y1 subtract = 1 }
-	change_variable = { name = nat_sum_value_delta_y1 multiply = 100 }
+	# ── Sum value % deltas (guarded) ──
+	if = {
+		limit = { NOT = { check_variable = { which = nat_sum_value_year_1 value = 0 } } }
+		set_variable = { name = nat_sum_value_delta_y1 value = var:nat_sum_value_year_0 }
+		change_variable = { name = nat_sum_value_delta_y1 divide = var:nat_sum_value_year_1 }
+		change_variable = { name = nat_sum_value_delta_y1 subtract = 1 }
+		change_variable = { name = nat_sum_value_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_sum_value_delta_y1 value = 0 } }
 
-	set_variable = { name = nat_sum_value_delta_y2 value = var:nat_sum_value_year_0 }
-	change_variable = { name = nat_sum_value_delta_y2 divide = var:nat_sum_value_year_2 }
-	change_variable = { name = nat_sum_value_delta_y2 subtract = 1 }
-	change_variable = { name = nat_sum_value_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = nat_sum_value_year_2 value = 0 } } }
+		set_variable = { name = nat_sum_value_delta_y2 value = var:nat_sum_value_year_0 }
+		change_variable = { name = nat_sum_value_delta_y2 divide = var:nat_sum_value_year_2 }
+		change_variable = { name = nat_sum_value_delta_y2 subtract = 1 }
+		change_variable = { name = nat_sum_value_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_sum_value_delta_y2 value = 0 } }
 
-	set_variable = { name = nat_sum_value_delta_y5 value = var:nat_sum_value_year_0 }
-	change_variable = { name = nat_sum_value_delta_y5 divide = var:nat_sum_value_year_5 }
-	change_variable = { name = nat_sum_value_delta_y5 subtract = 1 }
-	change_variable = { name = nat_sum_value_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = nat_sum_value_year_5 value = 0 } } }
+		set_variable = { name = nat_sum_value_delta_y5 value = var:nat_sum_value_year_0 }
+		change_variable = { name = nat_sum_value_delta_y5 divide = var:nat_sum_value_year_5 }
+		change_variable = { name = nat_sum_value_delta_y5 subtract = 1 }
+		change_variable = { name = nat_sum_value_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = nat_sum_value_delta_y5 value = 0 } }
 
-	# ── Investment pool % deltas — Capital tab Table 3 ──
-	set_variable = { name = ipool_delta_y1 value = var:ipool_year_0 }
-	change_variable = { name = ipool_delta_y1 divide = var:ipool_year_1 }
-	change_variable = { name = ipool_delta_y1 subtract = 1 }
-	change_variable = { name = ipool_delta_y1 multiply = 100 }
+	# ── Investment pool % deltas (guarded) ──
+	if = {
+		limit = { NOT = { check_variable = { which = ipool_year_1 value = 0 } } }
+		set_variable = { name = ipool_delta_y1 value = var:ipool_year_0 }
+		change_variable = { name = ipool_delta_y1 divide = var:ipool_year_1 }
+		change_variable = { name = ipool_delta_y1 subtract = 1 }
+		change_variable = { name = ipool_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = ipool_delta_y1 value = 0 } }
 
-	set_variable = { name = ipool_delta_y2 value = var:ipool_year_0 }
-	change_variable = { name = ipool_delta_y2 divide = var:ipool_year_2 }
-	change_variable = { name = ipool_delta_y2 subtract = 1 }
-	change_variable = { name = ipool_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = ipool_year_2 value = 0 } } }
+		set_variable = { name = ipool_delta_y2 value = var:ipool_year_0 }
+		change_variable = { name = ipool_delta_y2 divide = var:ipool_year_2 }
+		change_variable = { name = ipool_delta_y2 subtract = 1 }
+		change_variable = { name = ipool_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = ipool_delta_y2 value = 0 } }
 
-	set_variable = { name = ipool_delta_y5 value = var:ipool_year_0 }
-	change_variable = { name = ipool_delta_y5 divide = var:ipool_year_5 }
-	change_variable = { name = ipool_delta_y5 subtract = 1 }
-	change_variable = { name = ipool_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = ipool_year_5 value = 0 } } }
+		set_variable = { name = ipool_delta_y5 value = var:ipool_year_0 }
+		change_variable = { name = ipool_delta_y5 divide = var:ipool_year_5 }
+		change_variable = { name = ipool_delta_y5 subtract = 1 }
+		change_variable = { name = ipool_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = ipool_delta_y5 value = 0 } }
 
-	# ── National capital % deltas — Capital tab Table 2 sum column ──
-	set_variable = { name = natcap_delta_y1 value = var:natcap_year_0 }
-	change_variable = { name = natcap_delta_y1 divide = var:natcap_year_1 }
-	change_variable = { name = natcap_delta_y1 subtract = 1 }
-	change_variable = { name = natcap_delta_y1 multiply = 100 }
+	# ── National capital % deltas (guarded; can be negative — guard on != 0) ──
+	if = {
+		limit = { NOT = { check_variable = { which = natcap_year_1 value = 0 } } }
+		set_variable = { name = natcap_delta_y1 value = var:natcap_year_0 }
+		change_variable = { name = natcap_delta_y1 divide = var:natcap_year_1 }
+		change_variable = { name = natcap_delta_y1 subtract = 1 }
+		change_variable = { name = natcap_delta_y1 multiply = 100 }
+	}
+	else = { set_variable = { name = natcap_delta_y1 value = 0 } }
 
-	set_variable = { name = natcap_delta_y2 value = var:natcap_year_0 }
-	change_variable = { name = natcap_delta_y2 divide = var:natcap_year_2 }
-	change_variable = { name = natcap_delta_y2 subtract = 1 }
-	change_variable = { name = natcap_delta_y2 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = natcap_year_2 value = 0 } } }
+		set_variable = { name = natcap_delta_y2 value = var:natcap_year_0 }
+		change_variable = { name = natcap_delta_y2 divide = var:natcap_year_2 }
+		change_variable = { name = natcap_delta_y2 subtract = 1 }
+		change_variable = { name = natcap_delta_y2 multiply = 100 }
+	}
+	else = { set_variable = { name = natcap_delta_y2 value = 0 } }
 
-	set_variable = { name = natcap_delta_y5 value = var:natcap_year_0 }
-	change_variable = { name = natcap_delta_y5 divide = var:natcap_year_5 }
-	change_variable = { name = natcap_delta_y5 subtract = 1 }
-	change_variable = { name = natcap_delta_y5 multiply = 100 }
+	if = {
+		limit = { NOT = { check_variable = { which = natcap_year_5 value = 0 } } }
+		set_variable = { name = natcap_delta_y5 value = var:natcap_year_0 }
+		change_variable = { name = natcap_delta_y5 divide = var:natcap_year_5 }
+		change_variable = { name = natcap_delta_y5 subtract = 1 }
+		change_variable = { name = natcap_delta_y5 multiply = 100 }
+	}
+	else = { set_variable = { name = natcap_delta_y5 value = 0 } }
 }
 
 # ─── SNAPSHOTS ───
@@ -544,11 +643,15 @@ inv_first_tick_seed_effect = {
 		set_variable = { name = snap_year_4 value = year }
 		set_variable = { name = snap_year_5 value = year }
 
+		# v1.3.4: initialize counter HIGH so first January roll fires regardless of install month
+		set_variable = { name = snap_months_since_roll value = 12 }
+
 		set_variable = { name = gov_initialized value = 1 }
 		set_variable = { name = gov_v11_initialized value = 1 }
 		set_variable = { name = gov_v13_initialized value = 1 }
 		set_variable = { name = gov_v13b_initialized value = 1 }
 		set_variable = { name = gov_v13c_initialized value = 1 }
+		set_variable = { name = gov_v134_initialized value = 1 }
 	}
 
 	# v1.1 upgrade seed — existing v1.0 save
@@ -626,6 +729,13 @@ inv_first_tick_seed_effect = {
 		set_variable = { name = natcap_year_1 value = var:natcap_current }
 		set_variable = { name = natcap_year_2 value = var:natcap_current }
 		set_variable = { name = natcap_year_5 value = var:natcap_current }
+		# Sum value seeds — added in v1.3.3 to fix gap: v1.3b previously set
+		# gov_v13c_initialized=1 without seeding nat_sum_value, leaving these
+		# variables at 0 until the first January snapshot derived them.
+		set_variable = { name = nat_sum_value_year_0 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_1 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_2 value = var:nat_sum_value_current }
+		set_variable = { name = nat_sum_value_year_5 value = var:nat_sum_value_current }
 		set_variable = { name = gov_v13_initialized value = 1 }
 		set_variable = { name = gov_v13b_initialized value = 1 }
 		set_variable = { name = gov_v13c_initialized value = 1 }
@@ -643,6 +753,19 @@ inv_first_tick_seed_effect = {
 		set_variable = { name = nat_sum_value_year_5 value = var:nat_sum_value_current }
 		set_variable = { name = gov_v13c_initialized value = 1 }
 	}
+
+	# v1.3.4 upgrade seed — initialize the snap_months_since_roll counter for the
+	# new idempotency mechanism. Setting it to 12 ensures the next January will
+	# pass the threshold check (>= 6) regardless of which month the upgrade
+	# happens in.
+	if = {
+		limit = {
+			has_variable = gov_initialized
+			NOT = { has_variable = gov_v134_initialized }
+		}
+		set_variable = { name = snap_months_since_roll value = 12 }
+		set_variable = { name = gov_v134_initialized value = 1 }
+	}
 }
 
 # ─── MONTHLY UPDATE ───
@@ -652,10 +775,38 @@ inv_monthly_update_effect = {
 	inv_count_gov_building_levels_effect = yes
 	inv_count_national_assets_effect = yes
 	inv_first_tick_seed_effect = yes
-	# Roll snapshots in January (month is 0-indexed: 0 = January)
+	# Idempotency v3 (v1.3.5): year-rolled flag using has_variable/remove_variable.
+	#
+	# v1.3.3 used snap_age_0 = year - snap_year_0 with `check_variable value > 0`.
+	# Failed in year 7 (Jan 1894) — probably due to V3 caching `var:snap_year_0`
+	# reads under fast-succession pulses.
+	#
+	# v1.3.4 used a months-since-roll integer counter with `check_variable value >= 6`.
+	# ALSO failed (Jan 1900) — suggesting `check_variable` on numeric values has
+	# the same caching/staleness issue when pulses fire in tight succession.
+	#
+	# This v1.3.5 mechanism uses has_variable / remove_variable as the primitive.
+	# Existence checks plausibly go through a different engine path than value
+	# comparisons, so they may not suffer the same staleness:
+	#   - On the first January pulse: flag absent → roll → set flag
+	#   - On any further January pulse same year: flag present → skip
+	#   - On the first non-January pulse: flag present → remove it
+	# The flag is per-country (country-scope variable) and persists across saves.
 	if = {
-		limit = { month = 0 }
+		limit = {
+			month = 0
+			NOT = { has_variable = snap_rolled_this_year }
+		}
 		inv_yearly_snapshot_effect = yes
+		set_variable = { name = snap_rolled_this_year value = 1 }
+	}
+	# Clear the flag in any non-January month so next January can roll.
+	if = {
+		limit = {
+			NOT = { month = 0 }
+			has_variable = snap_rolled_this_year
+		}
+		remove_variable = snap_rolled_this_year
 	}
 	inv_compute_deltas_effect = yes
 }
