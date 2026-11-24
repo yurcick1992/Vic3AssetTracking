@@ -252,11 +252,17 @@ inv_compute_nat_value_for_building_effect = {
         ROOT = { set_variable = { name = temp_bldg_nat_value value = 400 } }
     }
     else_if = {
-        limit = { is_building_group = bg_light_industry }
+        limit = {
+            OR = {
+                is_building_group = bg_light_industry
+                is_building_type = building_arms_industry
+                is_building_type = building_artillery_foundry
+            }
+        }
         ROOT = { set_variable = { name = temp_bldg_nat_value value = 600 } }
     }
     else = {
-        # Heavy industry, military industry, and anything else defaults to very_high
+        # Heavy industry, munition plant, and anything else defaults to very_high
         ROOT = { set_variable = { name = temp_bldg_nat_value value = 800 } }
     }
 

@@ -627,14 +627,14 @@ types budget
 
 						tax_exp_frame = {
 							datacontext = "[GetPlayer]"
-							visible = "[GreaterThan_CFixedPoint(Country.GetShipConstructionGoodsExpenses, '(CFixedPoint)0')]"
+							visible = "[GreaterThan_CFixedPoint(Country.GetMilitaryShipConstructionGoodsExpenses, '(CFixedPoint)0')]"
 
 							blockoverride "text" {
 								text = "[concept_ship_construction]"
 							}
 
 							blockoverride "text_2" {
-								raw_text = "@money![Negate(Country.GetShipConstructionGoodsExpenses)|D+]"
+								raw_text = "@money![Negate(Country.GetMilitaryShipConstructionGoodsExpenses)|D+]"
 								tooltip = "SHIP_CONSTRUCTION_GOODS_EXPENSES_BREAKDOWN"
 							}
 
@@ -892,6 +892,21 @@ types budget
 						}
 
 						tax_exp_frame = {
+							visible = "[GreaterThan_CFixedPoint(GetPlayer.GetSupplyShipConstructionGoodsExpenses, '(CFixedPoint)0')]"
+
+							blockoverride "text" {
+								text = "BUDGET_SUPPLY_SHIP_CONSTRUCTION"
+							}
+
+							blockoverride "text_2" {
+								raw_text = "#N @money!-[GetPlayer.GetSupplyShipConstructionGoodsExpenses|D-]"
+								alpha = "[TransparentIfZero(GetPlayer.GetSupplyShipConstructionGoodsExpenses)]"
+							}
+
+							blockoverride "divider" {}
+						}
+
+						tax_exp_frame = {
 							visible = "[GreaterThan_CFixedPoint(GetPlayer.GetSupplyShipMaintenanceExpenses, '(CFixedPoint)0')]"
 
 							blockoverride "text" {
@@ -1011,7 +1026,7 @@ types budget
 							}
 
 							blockoverride "text_2" {
-								raw_text = "#variable @money![GetPlayer.PredictTreatyExpenses|D-]#!"
+								raw_text = "#N @money!-[GetPlayer.PredictTreatyExpenses|D-]"
 								using = treaty_expense_tooltip_with_graph
 								alpha = "[TransparentIfZero(GetPlayer.PredictTreatyExpenses)]"
 							}
@@ -1046,8 +1061,9 @@ types budget
 				}
 
 				flowcontainer = {
-					direction = vertical
 					visible = "[GreaterThan_CFixedPoint(GetPlayer.GetUnrealizedTaxes, '(CFixedPoint)0')]"
+					direction = vertical
+					spacing = 10
 
 					default_header_2texts = {
 						blockoverride "text1" {
@@ -1058,11 +1074,114 @@ types budget
 							tooltip = UNREALIZED_TAXES_BREAKDOWN
 						}
 					}
-					textbox = {
-						autoresize = yes
-						margin = { 10 0 }
-						margin_bottom = 10
-						text = "[GetPlayer.GetAverageStateTaxCollectionMultBreakdown]"
+
+					flowcontainer = {
+						direction = vertical
+						parentanchor = hcenter
+
+						widget = {
+							size = { @panel_width 30 }
+
+							hbox = {
+
+								sort_button = {
+									layoutpolicy_horizontal = expanding
+									layoutstretchfactor_horizontal = 2.2
+									size = { 0 30 }
+									onclick = "[AccessPlayer.SortUnrealizedTaxStates('name')]"
+									align = hcenter|nobaseline
+									tooltip = "SORT_BY_STATE"
+									text = "concept_state"
+								}
+
+								sort_button = {
+									layoutpolicy_horizontal = expanding
+									layoutstretchfactor_horizontal = 1
+									size = { 0 30 }
+									onclick = "[AccessPlayer.SortUnrealizedTaxStates('taxwaste')]"
+									align = hcenter|nobaseline
+									tooltip = "SORT_BY_TAX_WASTE"
+									text = "UNREALIZED_TAXES_TAX_WASTE_TITLE"
+								}
+
+								sort_button = {
+									layoutpolicy_horizontal = expanding
+									layoutstretchfactor_horizontal = 1
+									size = { 0 30 }
+									onclick = "[AccessPlayer.SortUnrealizedTaxStates('uncollected')]"
+									align = hcenter|nobaseline
+									tooltip = "SORT_BY_UNCOLLECTED_TAXES"
+									text = "UNREALIZED_TAXES_UNCOLLECTED_TITLE"
+								}
+							}
+						}
+
+						flowcontainer = {
+							direction = vertical
+							datamodel = "[AccessPlayer.AccessUnrealizedTaxStates]"
+
+							item = {
+								button = {
+									size = { @panel_width 40 }
+									onmousehierarchyenter = "[AccessHighlightManager.HighlightState(State.Self)]"
+									onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+									onclick = "[InformationPanelBar.OpenStatePanel( State.AccessSelf )]"
+									onrightclick = "[RightClickMenuManager.ShowForState(State.AccessSelf)]"
+									alwaystransparent = no
+									using = default_button
+
+									hbox = {
+										margin = { 8 0 }
+
+										textbox = {
+											layoutpolicy_horizontal = expanding
+											layoutstretchfactor_horizontal = 2.2
+											size = { 0 40 }
+											margin_left = 3
+											multiline = yes
+											align = nobaseline
+											using = tooltip_se
+											raw_text = "[AddTextIf(Not(State.GetMarket.IsSame(GetPlayer.GetCapital.GetMarket)), State.GetMarket.GetOwner.GetFlagTextIcon)] [State.GetNameNoFormatting]"
+
+											tooltipwidget = {
+												FancyTooltip_State = {}
+											}
+										}
+
+										widget = {
+											layoutpolicy_horizontal = expanding
+											layoutstretchfactor_horizontal = 1
+											size = { 0 30 }
+
+											textbox = {
+												size = { 80 30 }
+												parentanchor = center
+												align = nobaseline
+												alpha = "[TransparentIfZero(State.GetTaxWasteAmount)]"
+												using = tooltip_se
+												tooltip = "[State.GetTaxWasteDesc]"
+												raw_text = "@money![State.GetTaxWasteAmount|D-]"
+											}
+										}
+
+										widget = {
+											layoutpolicy_horizontal = expanding
+											layoutstretchfactor_horizontal = 1
+											size = { 0 30 }
+
+											textbox = {
+												size = { 100% 100% }
+												align = right|nobaseline
+												alpha = "[TransparentIfZero(State.GetUncollectedTaxAmount)]"
+												using = tooltip_se
+												tooltip = "[State.GetTaxCollectionMultDesc]"
+												raw_text = "@money![State.GetUncollectedTaxAmount|D-] ([State.GetTaxCollectionMult|+%1])"
+											}
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -1315,16 +1434,47 @@ types budget
 					}
 				}
 
-				button = {
-					datacontext = "[GetPlayer]"
-					using = default_button_action
+				widget = {
+					name = "declare_bankruptcy_button"
 					size = { 250 75 }
-					text = "DECLARE_BANKRUPTCY"
-					onclick = "[PopupManager.AskConfirmation(Country.DeclareBankruptcy)]"
-					enabled = "[IsValid(Country.DeclareBankruptcy)]"
-					tooltip = "DECLARE_BANKRUPTCY_TOOLTIP"
-					using = tooltip_below
 					parentanchor = hcenter
+
+					button = {
+						visible = "[Or(IsValid(Country.DeclareBankruptcy), Not(GetPlayer.HasTimedModifier('declared_bankruptcy')))]"
+						datacontext = "[GetPlayer]"
+						using = default_button_action
+						size = { 100% 100% }
+						onclick = "[PopupManager.AskConfirmation(Country.DeclareBankruptcy)]"
+						enabled = "[IsValid(Country.DeclareBankruptcy)]"
+						tooltip = "DECLARE_BANKRUPTCY_TOOLTIP"
+						using = tooltip_below
+						text = "DECLARE_BANKRUPTCY"
+					}
+
+					widget = {
+						visible = "[And(GetPlayer.HasTimedModifier('declared_bankruptcy'), Not(IsValid(Country.DeclareBankruptcy)))]"
+						datacontext = "[GetPlayer]"
+						size = { 100% 100% }
+						alwaystransparent = no
+						tooltip = "DECLARE_BANKRUPTCY_TOOLTIP"
+						using = tooltip_below
+
+						background = {
+							using = paper_bg
+						}
+
+						icon = {
+							size = { 100% 100% }
+							using = highlighted_selected_square_selection
+						}
+
+						textbox = {
+							parentanchor = center
+							align = hcenter|nobaseline
+							using = fontsize_large
+							text = "DECLARED_BANKRUPTCY"
+						}
+					}
 				}
 
 				flowcontainer = {
@@ -1347,6 +1497,44 @@ types budget
 						tooltip = "[GetPlayer.GetCreditTooltip]"
 						align = nobaseline
 						parentanchor = vcenter
+					}
+				}
+
+				widget = {
+					name = "bankruptcy_progress_bar"
+					visible = "[GetPlayer.HasTimedModifier('declared_bankruptcy')]"
+					size = { @panel_width_minus_10 45 }
+					parentanchor = hcenter
+					tooltip = "[GetPlayer.GetTimedModifier('declared_bankruptcy').GetTooltip]"
+
+					bad_progressbar_horizontal = {
+						parentanchor = vcenter
+						name = "bankruptcy_progressbar"
+						size = { 100% 100% }
+
+						blockoverride "values" {
+							value = "[GetPlayer.GetTimedModifier('declared_bankruptcy').GetPercentageRemainingDays]"
+							min = 0
+							max = 1
+						}
+					}
+
+					textbox = {
+						autoresize = yes
+						align = nobaseline
+						parentanchor = vcenter
+						margin_left = 20
+						using = fontsize_large
+						text = "BANKRUPTCY_AFFECTED_BY"
+					}
+
+					textbox = {
+						using = fontsize_large
+						autoresize = yes
+						parentanchor = right|vcenter
+						align = right|nobaseline
+						margin_right = 20
+						text = "BANKRUPTCY_TIME_REMAINING"
 					}
 				}
 

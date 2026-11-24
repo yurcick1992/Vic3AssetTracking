@@ -24,6 +24,7 @@ inv_count_gov_building_levels_effect = {
 			NOT = { is_building_group = bg_owner_buildings }
 			NOT = { is_building_group = bg_gold_fields }
 			NOT = { is_building_group = bg_monuments_hidden }
+			NOT = { is_building_group = bg_cossack_host }
 			country_ownership_fraction > 0
 		}
 		ROOT = {
@@ -69,6 +70,7 @@ inv_count_national_assets_effect = {
 			NOT = { is_building_group = bg_owner_buildings }
 			NOT = { is_building_group = bg_gold_fields }
 			NOT = { is_building_group = bg_monuments_hidden }
+			NOT = { is_building_group = bg_cossack_host }
 			levels_owned_by_country = { target = ROOT value >= 1 }
 		}
 		inv_staircase_nat_levels_effect = yes
@@ -94,6 +96,7 @@ inv_count_national_assets_effect = {
 				NOT = { is_building_group = bg_owner_buildings }
 				NOT = { is_building_group = bg_gold_fields }
 				NOT = { is_building_group = bg_monuments_hidden }
+				NOT = { is_building_group = bg_cossack_host }
 				levels_owned_by_country = { target = ROOT value >= 1 }
 			}
 			inv_staircase_nat_levels_effect = yes
@@ -124,7 +127,7 @@ inv_count_national_assets_effect = {
 # ─── DELTAS ───
 # Compute deltas between start-of-year (year_0) and historical snapshots (year_1/2/5).
 # Level deltas are absolute (year_0 - year_X). Monetary deltas are percentage
-# ((year_0 / year_X - 1) x 100), guarded against div/0 by check_variable on the
+# ((year_0 / year_X - 1) x 100), guarded against div/0 by a var:X = 0 test on the
 # denominator. When the denominator is 0, the delta is set to 0 (Jomini does not
 # log an error from a guarded skip, unlike an unguarded division). The GUI shows
 # the value with "(+0)" in that case — see CLAUDE.md for the dash-display follow-up.
@@ -152,7 +155,7 @@ inv_compute_deltas_effect = {
 
 	# ── Gov value % deltas (guarded) ──
 	if = {
-		limit = { NOT = { check_variable = { which = gov_value_year_1 value = 0 } } }
+		limit = { NOT = { var:gov_value_year_1 = 0 } }
 		set_variable = { name = gov_value_delta_y1 value = var:gov_value_year_0 }
 		change_variable = { name = gov_value_delta_y1 divide = var:gov_value_year_1 }
 		change_variable = { name = gov_value_delta_y1 subtract = 1 }
@@ -161,7 +164,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = gov_value_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = gov_value_year_2 value = 0 } } }
+		limit = { NOT = { var:gov_value_year_2 = 0 } }
 		set_variable = { name = gov_value_delta_y2 value = var:gov_value_year_0 }
 		change_variable = { name = gov_value_delta_y2 divide = var:gov_value_year_2 }
 		change_variable = { name = gov_value_delta_y2 subtract = 1 }
@@ -170,7 +173,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = gov_value_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = gov_value_year_5 value = 0 } } }
+		limit = { NOT = { var:gov_value_year_5 = 0 } }
 		set_variable = { name = gov_value_delta_y5 value = var:gov_value_year_0 }
 		change_variable = { name = gov_value_delta_y5 divide = var:gov_value_year_5 }
 		change_variable = { name = gov_value_delta_y5 subtract = 1 }
@@ -180,7 +183,7 @@ inv_compute_deltas_effect = {
 
 	# ── Treasury % deltas (guarded; treasury can be negative — guard on != 0) ──
 	if = {
-		limit = { NOT = { check_variable = { which = treasury_year_1 value = 0 } } }
+		limit = { NOT = { var:treasury_year_1 = 0 } }
 		set_variable = { name = treasury_delta_y1 value = var:treasury_year_0 }
 		change_variable = { name = treasury_delta_y1 divide = var:treasury_year_1 }
 		change_variable = { name = treasury_delta_y1 subtract = 1 }
@@ -189,7 +192,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = treasury_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = treasury_year_2 value = 0 } } }
+		limit = { NOT = { var:treasury_year_2 = 0 } }
 		set_variable = { name = treasury_delta_y2 value = var:treasury_year_0 }
 		change_variable = { name = treasury_delta_y2 divide = var:treasury_year_2 }
 		change_variable = { name = treasury_delta_y2 subtract = 1 }
@@ -198,7 +201,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = treasury_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = treasury_year_5 value = 0 } } }
+		limit = { NOT = { var:treasury_year_5 = 0 } }
 		set_variable = { name = treasury_delta_y5 value = var:treasury_year_0 }
 		change_variable = { name = treasury_delta_y5 divide = var:treasury_year_5 }
 		change_variable = { name = treasury_delta_y5 subtract = 1 }
@@ -208,7 +211,7 @@ inv_compute_deltas_effect = {
 
 	# ── Net worth % deltas (guarded; total can be negative — guard on != 0) ──
 	if = {
-		limit = { NOT = { check_variable = { which = total_year_1 value = 0 } } }
+		limit = { NOT = { var:total_year_1 = 0 } }
 		set_variable = { name = total_delta_y1 value = var:total_year_0 }
 		change_variable = { name = total_delta_y1 divide = var:total_year_1 }
 		change_variable = { name = total_delta_y1 subtract = 1 }
@@ -217,7 +220,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = total_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = total_year_2 value = 0 } } }
+		limit = { NOT = { var:total_year_2 = 0 } }
 		set_variable = { name = total_delta_y2 value = var:total_year_0 }
 		change_variable = { name = total_delta_y2 divide = var:total_year_2 }
 		change_variable = { name = total_delta_y2 subtract = 1 }
@@ -226,7 +229,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = total_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = total_year_5 value = 0 } } }
+		limit = { NOT = { var:total_year_5 = 0 } }
 		set_variable = { name = total_delta_y5 value = var:total_year_0 }
 		change_variable = { name = total_delta_y5 divide = var:total_year_5 }
 		change_variable = { name = total_delta_y5 subtract = 1 }
@@ -266,7 +269,7 @@ inv_compute_deltas_effect = {
 
 	# ── Domestic value % deltas (guarded) ──
 	if = {
-		limit = { NOT = { check_variable = { which = nat_dom_value_year_1 value = 0 } } }
+		limit = { NOT = { var:nat_dom_value_year_1 = 0 } }
 		set_variable = { name = nat_dom_value_delta_y1 value = var:nat_dom_value_year_0 }
 		change_variable = { name = nat_dom_value_delta_y1 divide = var:nat_dom_value_year_1 }
 		change_variable = { name = nat_dom_value_delta_y1 subtract = 1 }
@@ -275,7 +278,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = nat_dom_value_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = nat_dom_value_year_2 value = 0 } } }
+		limit = { NOT = { var:nat_dom_value_year_2 = 0 } }
 		set_variable = { name = nat_dom_value_delta_y2 value = var:nat_dom_value_year_0 }
 		change_variable = { name = nat_dom_value_delta_y2 divide = var:nat_dom_value_year_2 }
 		change_variable = { name = nat_dom_value_delta_y2 subtract = 1 }
@@ -284,7 +287,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = nat_dom_value_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = nat_dom_value_year_5 value = 0 } } }
+		limit = { NOT = { var:nat_dom_value_year_5 = 0 } }
 		set_variable = { name = nat_dom_value_delta_y5 value = var:nat_dom_value_year_0 }
 		change_variable = { name = nat_dom_value_delta_y5 divide = var:nat_dom_value_year_5 }
 		change_variable = { name = nat_dom_value_delta_y5 subtract = 1 }
@@ -294,7 +297,7 @@ inv_compute_deltas_effect = {
 
 	# ── Foreign value % deltas (guarded) ──
 	if = {
-		limit = { NOT = { check_variable = { which = nat_for_value_year_1 value = 0 } } }
+		limit = { NOT = { var:nat_for_value_year_1 = 0 } }
 		set_variable = { name = nat_for_value_delta_y1 value = var:nat_for_value_year_0 }
 		change_variable = { name = nat_for_value_delta_y1 divide = var:nat_for_value_year_1 }
 		change_variable = { name = nat_for_value_delta_y1 subtract = 1 }
@@ -303,7 +306,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = nat_for_value_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = nat_for_value_year_2 value = 0 } } }
+		limit = { NOT = { var:nat_for_value_year_2 = 0 } }
 		set_variable = { name = nat_for_value_delta_y2 value = var:nat_for_value_year_0 }
 		change_variable = { name = nat_for_value_delta_y2 divide = var:nat_for_value_year_2 }
 		change_variable = { name = nat_for_value_delta_y2 subtract = 1 }
@@ -312,7 +315,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = nat_for_value_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = nat_for_value_year_5 value = 0 } } }
+		limit = { NOT = { var:nat_for_value_year_5 = 0 } }
 		set_variable = { name = nat_for_value_delta_y5 value = var:nat_for_value_year_0 }
 		change_variable = { name = nat_for_value_delta_y5 divide = var:nat_for_value_year_5 }
 		change_variable = { name = nat_for_value_delta_y5 subtract = 1 }
@@ -322,7 +325,7 @@ inv_compute_deltas_effect = {
 
 	# ── Sum value % deltas (guarded) ──
 	if = {
-		limit = { NOT = { check_variable = { which = nat_sum_value_year_1 value = 0 } } }
+		limit = { NOT = { var:nat_sum_value_year_1 = 0 } }
 		set_variable = { name = nat_sum_value_delta_y1 value = var:nat_sum_value_year_0 }
 		change_variable = { name = nat_sum_value_delta_y1 divide = var:nat_sum_value_year_1 }
 		change_variable = { name = nat_sum_value_delta_y1 subtract = 1 }
@@ -331,7 +334,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = nat_sum_value_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = nat_sum_value_year_2 value = 0 } } }
+		limit = { NOT = { var:nat_sum_value_year_2 = 0 } }
 		set_variable = { name = nat_sum_value_delta_y2 value = var:nat_sum_value_year_0 }
 		change_variable = { name = nat_sum_value_delta_y2 divide = var:nat_sum_value_year_2 }
 		change_variable = { name = nat_sum_value_delta_y2 subtract = 1 }
@@ -340,7 +343,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = nat_sum_value_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = nat_sum_value_year_5 value = 0 } } }
+		limit = { NOT = { var:nat_sum_value_year_5 = 0 } }
 		set_variable = { name = nat_sum_value_delta_y5 value = var:nat_sum_value_year_0 }
 		change_variable = { name = nat_sum_value_delta_y5 divide = var:nat_sum_value_year_5 }
 		change_variable = { name = nat_sum_value_delta_y5 subtract = 1 }
@@ -350,7 +353,7 @@ inv_compute_deltas_effect = {
 
 	# ── Investment pool % deltas (guarded) ──
 	if = {
-		limit = { NOT = { check_variable = { which = ipool_year_1 value = 0 } } }
+		limit = { NOT = { var:ipool_year_1 = 0 } }
 		set_variable = { name = ipool_delta_y1 value = var:ipool_year_0 }
 		change_variable = { name = ipool_delta_y1 divide = var:ipool_year_1 }
 		change_variable = { name = ipool_delta_y1 subtract = 1 }
@@ -359,7 +362,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = ipool_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = ipool_year_2 value = 0 } } }
+		limit = { NOT = { var:ipool_year_2 = 0 } }
 		set_variable = { name = ipool_delta_y2 value = var:ipool_year_0 }
 		change_variable = { name = ipool_delta_y2 divide = var:ipool_year_2 }
 		change_variable = { name = ipool_delta_y2 subtract = 1 }
@@ -368,7 +371,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = ipool_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = ipool_year_5 value = 0 } } }
+		limit = { NOT = { var:ipool_year_5 = 0 } }
 		set_variable = { name = ipool_delta_y5 value = var:ipool_year_0 }
 		change_variable = { name = ipool_delta_y5 divide = var:ipool_year_5 }
 		change_variable = { name = ipool_delta_y5 subtract = 1 }
@@ -378,7 +381,7 @@ inv_compute_deltas_effect = {
 
 	# ── National capital % deltas (guarded; can be negative — guard on != 0) ──
 	if = {
-		limit = { NOT = { check_variable = { which = natcap_year_1 value = 0 } } }
+		limit = { NOT = { var:natcap_year_1 = 0 } }
 		set_variable = { name = natcap_delta_y1 value = var:natcap_year_0 }
 		change_variable = { name = natcap_delta_y1 divide = var:natcap_year_1 }
 		change_variable = { name = natcap_delta_y1 subtract = 1 }
@@ -387,7 +390,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = natcap_delta_y1 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = natcap_year_2 value = 0 } } }
+		limit = { NOT = { var:natcap_year_2 = 0 } }
 		set_variable = { name = natcap_delta_y2 value = var:natcap_year_0 }
 		change_variable = { name = natcap_delta_y2 divide = var:natcap_year_2 }
 		change_variable = { name = natcap_delta_y2 subtract = 1 }
@@ -396,7 +399,7 @@ inv_compute_deltas_effect = {
 	else = { set_variable = { name = natcap_delta_y2 value = 0 } }
 
 	if = {
-		limit = { NOT = { check_variable = { which = natcap_year_5 value = 0 } } }
+		limit = { NOT = { var:natcap_year_5 = 0 } }
 		set_variable = { name = natcap_delta_y5 value = var:natcap_year_0 }
 		change_variable = { name = natcap_delta_y5 divide = var:natcap_year_5 }
 		change_variable = { name = natcap_delta_y5 subtract = 1 }

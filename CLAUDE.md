@@ -50,7 +50,7 @@ Eight files, each with a clear responsibility:
 | `common/scripted_effects/state_assets_effects.txt` | Country-scope effects: domestic gov counting (Assets tab), national asset counting with staircase (Capital tab), treasury/ipool capture, net worth and national capital computation, delta computation, yearly snapshot rolling (5-deep chain), first-tick seed with v1.1/v1.3b/v1.3c upgrade support. |
 | `common/scripted_effects/state_assets_staircase.txt` | Building-scope effects for Capital tab: `inv_staircase_nat_levels_effect` (200 if-blocks counting `levels_owned_by_country >= N`) and `inv_compute_nat_value_for_building_effect` (cost tier × 250 × staircase levels). |
 | `common/on_actions/state_assets_on_actions.txt` | Hooks into `on_monthly_pulse_country`. Snapshot rolling triggered by `month = 0` check inside monthly pulse (not yearly pulse, which is staggered). |
-| `gui/budget_panel.gui` | Full copy of vanilla budget panel. Assets tab has Tables 1-2. Capital tab (4th tab) has Tables 3-5. |
+| `gui/budget_panel.gui` | Full copy of the vanilla 1.15.2 budget panel plus three pure insertions: the `fourth_button` overrides, the Assets tables (end of the Assets tab: Tables 1-2) and the Capital tab (4th tab: Tables 3-5). On a game update, re-splice these onto the new vanilla file; a diff against vanilla must show additions only. |
 | `localization/english/state_assets_l_english.yml` | Localization keys for headers, column names, row labels. **Must have UTF-8 BOM** (`EF BB BF`). |
 | `CLAUDE.md` | This file. |
 
@@ -102,9 +102,12 @@ These two dimensions are **fully independent**. Type tells you gov vs private vs
 Construction cost tiers (from `game/common/script_values/building_values.txt`):
 - **very_low (100)**: trade centers (`bg_trade`)
 - **low (200)**: agriculture, ranching, plantations, logging, rubber, fishing, whaling
-- **medium (400)**: mines, oil, ports, arts academies, power plants
-- **high (600)**: light industry (`bg_light_industry`)
-- **very_high (800)**: heavy industry, military industry, railways
+- **medium (400)**: mines (incl. copper, new in 1.15), oil, ports, arts academies, power plants
+- **high (600)**: light industry (`bg_light_industry`, which includes shipyards), arms industry, artillery foundry
+- **very_high (800)**: heavy industry, munition plant, railways
+
+The tier table exists twice and both copies must agree: `inv_gov_owned_value_per_building` (`state_assets_values.txt`, Assets tab) and `inv_compute_nat_value_for_building_effect` (`state_assets_staircase.txt`, Capital tab).
+Checked against every counted building of vanilla 1.15.2 in v1.3.4.
 
 ## Staircase Level Counting (Capital Tab)
 
@@ -230,6 +233,7 @@ NOT bg_service                     # not urban centers
 NOT bg_owner_buildings             # not manors/financial districts
 NOT bg_gold_fields                 # not gold mines
 NOT bg_monuments_hidden            # not monuments
+NOT bg_cossack_host                # 1.15: child of bg_ranching; not buildable, no construction cost
 country_ownership_fraction > 0     # some government owns at least a share
 ```
 
@@ -241,6 +245,7 @@ NOT bg_service
 NOT bg_owner_buildings
 NOT bg_gold_fields
 NOT bg_monuments_hidden
+NOT bg_cossack_host
 levels_owned_by_country = { target = ROOT value >= 1 }  # ROOT's nationals own at least 1 level
 ```
 

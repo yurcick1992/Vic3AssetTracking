@@ -21,8 +21,8 @@ inv_gov_owned_levels_value = {
 #   very_low (100): trade centers
 #   low      (200): agriculture, ranching, plantations, logging, rubber, fishing, whaling
 #   medium   (400): mines, oil rigs, ports, arts academy, power plants
-#   high     (600): light industry
-#   very_high(800): heavy industry, military industry, railways
+#   high     (600): light industry (incl. shipyards), arms industry, artillery foundry
+#   very_high(800): heavy industry, munition plant, railways
 
 inv_gov_owned_value_per_building = {
 	value = 0
@@ -67,12 +67,18 @@ inv_gov_owned_value_per_building = {
 		}
 		add = 400
 	}
-	# HIGH (600): light industry
+	# HIGH (600): light industry, plus two of the three military industries
 	else_if = {
-		limit = { is_building_group = bg_light_industry }
+		limit = {
+			OR = {
+				is_building_group = bg_light_industry
+				is_building_type = building_arms_industry
+				is_building_type = building_artillery_foundry
+			}
+		}
 		add = 600
 	}
-	# VERY_HIGH (800): heavy industry, military industry, anything else
+	# VERY_HIGH (800): heavy industry, munition plant, anything else
 	else = {
 		add = 800
 	}
